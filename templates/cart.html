@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ar">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>السلة</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .cart-item img {
+            max-width: 80px;
+            height: auto;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .cart-item-details {
+            flex: 1;
+        }
+
+        .remove-btn {
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .total-price {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .action-buttons .btn {
+            width: 90%;
+            margin: 5px auto;
+            font-size: 16px;
+            padding: 10px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .cart-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .cart-item img {
+                margin-bottom: 10px;
+                max-width: 100px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h2 class="text-center">🛒 السلة</h2>
+        <div id="cart-items" class="mt-4"></div>
+        <div class="total-price" id="total-price"></div>
+        <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="goBack()">🔙 العودة</button>
+            <button class="btn btn-primary" onclick="goToHome()">🏠 الرئيسية</button>
+            <button class="btn btn-success" onclick="goToCheckout()">💳 إتمام الشراء</button>
+        </div>
+        <div class="loading" id="loading">
+            <p>جاري معالجة طلبك، الرجاء الانتظار...</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const cartItemsContainer = document.getElementById("cart-items");
+            const totalPriceContainer = document.getElementById("total-price");
+            const loading = document.getElementById("loading");
+            const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = "<p class='text-center'>🛒 السلة فارغة.</p>";
+                totalPriceContainer.innerHTML = "";
+                return;
+            }
+
+            loading.style.display = "block";
+
+            fetch("/api/products")
+                .then(response => response.json())
+                .then(products => {
+                    cartItemsContainer.innerHTML = "";
+                    let totalPrice = 0;
+
+                    cart.forEach(cartItem => {
+                        const product = products.find(p => p.id === cartItem.id);
+                        if (product) {
+                            const discountPrice = product.discount
+                                ? (product.price - (product.price * product.discount / 100)).toFixed(2)
+                                : product.price.toFixed(2);
+
+                            const itemTotalPrice = discountPrice * cartItem.quantity;
+                            totalPrice += itemTotalPrice;
+
+                            const itemHTML = `
+                                <div class="cart-item">
+                                    <img src="${product.image}" alt="${product.name}">
+                                    <div class="cart-item-details">
+                                        <h5>${product.name}</h5>
+                                        <p>الكمية: ${cartItem.quantity}</p>
+                                        <p>السعر بعد الخصم: $${discountPrice}</p>
+                                        <p>المجموع: $${itemTotalPrice.toFixed(2)}</p>
+                                    </div>
+                                    <button class="remove-btn" onclick="removeFromCart('${product.id}')">❌</button>
+                                </div>`;
+                            cartItemsContainer.innerHTML += itemHTML;
+                        }
+                    });
+
+                    totalPriceContainer.innerHTML = `💰 السعر الإجمالي: $${totalPrice.toFixed(2)}`;
+                })
+                .catch(error => console.error("❌ خطأ في جلب المنتجات:", error))
+                .finally(() => loading.style.display = "none");
+        });
+
+        function removeFromCart(productId) {
+            let cart = JSON.parse(localStorage.getItem("cart")) || [];
+            cart = cart.filter(item => item.id !== productId);
+            localStorage.setItem("cart", JSON.stringify(cart));
+            location.reload();
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        function goToHome() {
+            window.location.href = "/";
+        }
+
+        function goToCheckout() {
+            const cart = JSON.parse(localStorage.getItem("cart")) || [];
+            if (cart.length === 0) {
+                alert("❌ السلة فارغة. الرجاء إضافة منتجات قبل إتمام الشراء.");
+                return;
+            }
+            window.location.href = "/checkout";
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar">
+
+<head>
+    <meta charset="UTF-8">
+    <title>إتمام الشراء</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <style>
+        body {
+            font-size: 16px;
+        }
+
+        .payment-container {
+            max-width: 100%;
+            width: 90%;
+            margin: 30px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background: #fff;
+        }
+
+        .payment-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .payment-options button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .pay-on-delivery {
+            background: #28a745;
+            color: white;
+        }
+
+        .pay-with-visa {
+            background: #007bff;
+            color: white;
+        }
+
+        .payment-form {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .payment-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .payment-form button {
+            width: 100%;
+            padding: 12px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            color: #555;
+        }
+
+        @media (max-width: 600px) {
+            .payment-container {
+                width: 95%;
+                padding: 15px;
+            }
+
+            .payment-options button {
+                font-size: 16px;
+            }
+
+            .payment-form input {
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            .payment-form button {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="payment-container">
+        <h2 class="text-center">إتمام عملية الشراء</h2>
+        <div class="payment-options">
+            <button class="pay-on-delivery" onclick="showDeliveryForm()">💵 الدفع عند الاستلام</button>
+            <button class="pay-with-visa" onclick="showVisaForm()">💳 الدفع باستخدام فيزا</button>
+        </div>
+
+        <div id="delivery-form" class="payment-form">
+            <h3>الدفع عند الاستلام</h3>
+            <input type="text" id="name" placeholder="الاسم الكامل" required>
+            <input type="tel" id="phone" placeholder="رقم الهاتف" required>
+            <input type="email" id="email" placeholder="البريد الإلكتروني" required>
+            <input type="text" id="address" placeholder="العنوان" required>
+            <button onclick="confirmOrder('delivery')">تأكيد الطلب</button>
+        </div>
+
+        <div id="visa-form" class="payment-form">
+            <h3>الدفع باستخدام فيزا</h3>
+            <input type="text" id="card-name" placeholder="اسم صاحب البطاقة" required>
+            <input type="number" id="card-number" placeholder="رقم البطاقة" required>
+            <input type="text" id="card-expiry" placeholder="تاريخ الانتهاء (MM/YY)" required>
+            <input type="number" id="card-cvv" placeholder="CVV" required>
+            <button onclick="confirmOrder('visa')">تأكيد الطلب</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <p>جاري معالجة طلبك، الرجاء الانتظار...</p>
+        </div>
+    </div>
+
+    <script>
+        function showDeliveryForm() {
+            document.getElementById("delivery-form").style.display = "block";
+            document.getElementById("visa-form").style.display = "none";
+        }
+
+        function showVisaForm() {
+            document.getElementById("visa-form").style.display = "block";
+            document.getElementById("delivery-form").style.display = "none";
+        }
+
+        async function confirmOrder(paymentMethod) {
+            const loading = document.getElementById("loading");
+            loading.style.display = "block";
+
+            let orderData = {
+                paymentMethod: paymentMethod,
+                items: JSON.parse(localStorage.getItem("cart") || "[]"),
+            };
+
+            if (paymentMethod === "delivery") {
+                const name = document.getElementById("name").value;
+                const phone = document.getElementById("phone").value;
+                const email = document.getElementById("email").value;
+                const address = document.getElementById("address").value;
+
+                if (!name || !phone || !email || !address) {
+                    alert("❌ الرجاء ملء جميع الحقول المطلوبة.");
+                    loading.style.display = "none";
+                    return;
+                }
+
+                orderData.customerDetails = { name, phone, email, address };
+            } else if (paymentMethod === "visa") {
+                const cardName = document.getElementById("card-name").value;
+                const cardNumber = document.getElementById("card-number").value;
+                const cardExpiry = document.getElementById("card-expiry").value;
+                const cardCVV = document.getElementById("card-cvv").value;
+
+                if (!cardName || !cardNumber || !cardExpiry || !cardCVV) {
+                    alert("❌ الرجاء ملء جميع بيانات البطاقة.");
+                    loading.style.display = "none";
+                    return;
+                }
+
+                orderData.cardDetails = { cardName, cardNumber, cardExpiry, cardCVV };
+            }
+
+            try {
+                const response = await fetch("/api/place_order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(orderData),
+                });
+
+                if (!response.ok) {
+                    throw new Error("فشل في تقديم الطلب.");
+                }
+
+                alert("🚀 تم تأكيد الطلب بنجاح!");
+                localStorage.removeItem("cart");
+                window.location.href = "/order_confirmation";
+            } catch (error) {
+                console.error("❌ خطأ:", error);
+                alert("❌ فشل في تقديم الطلب. الرجاء المحاولة مرة أخرى.");
+            } finally {
+                loading.style.display = "none";
+            }
+        }
+    </script>
+</body>
+<script type="text/javascript">
+        (function(d, t) {
+            var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+            v.onload = function() {
+              window.voiceflow.chat.load({
+                verify: { projectID: '6795ff9352bfdd46f63950fa' },
+                url: 'https://general-runtime.voiceflow.com',
+                versionID: 'production', 
+                voice: { 
+                  url: "https://runtime-api.voiceflow.com" 
+                }
+              });
+            }
+            v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs";
+            v.type = "text/javascript";
+            s.parentNode.insertBefore(v, s);
+        })(document, 'script');
+      </script>
+  </body>
+
+</html>

@@ -1,0 +1,426 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+/* إعادة تعيين القيم الافتراضية */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* الأنماط العامة */
+body {
+  font-family: "Poppins", sans-serif;
+  background-color: #fafafa; /* لون خلفية فاتح */
+  color: #333; /* لون النص لزيادة التباين */
+}
+
+/* قسم البطل (Hero Section) */
+#hero-section {
+  background-image: url("{{ url_for('static', filename='img/back.jpg') }}");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 70vh; /* تغطية 70% من الشاشة */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 50px 20px;
+  background: none;
+  border-radius: 10px;
+  margin-top: 30px;
+  position: relative;
+  z-index: 1;
+}
+
+/* قسم العلامات التجارية (Brand Section) */
+#brand {
+  text-align: center;
+  margin-top: 200px; /* زيادة المسافة للأسفل */
+  padding: 20px;
+  background: none;
+  border-radius: 10px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* قسم المنتجات الجديدة (New Arrivals) */
+#new {
+  text-align: center;
+  margin-top: 50px;
+  padding: 30px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+}
+
+#new .details {
+  margin-top: 15px;
+}
+
+#new button {
+  background: #fb774b;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#new button:hover {
+  background: #e05a34;
+}
+
+/* أنماط العناوين */
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+}
+
+h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #333;
+}
+
+h3 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #333;
+}
+
+h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+h5 {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #1d1d1d;
+}
+
+h6 {
+  font-size: 0.9rem;
+  color: #d8d8d8;
+}
+
+/* الخط الأفقي */
+hr {
+  width: 30px;
+  height: 2px;
+  background-color: #fb774b;
+  border: none;
+}
+
+/* أيقونات الشريط العلوي */
+.navbar i {
+  font-size: 1.2rem;
+  padding: 0.7px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s ease;
+}
+
+#bar {
+  font-size: 1.5rem;
+  padding: 0.7px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s ease;
+  color: black;
+}
+
+#bar:hover,
+#bar:active {
+  color: #d8d8d8;
+}
+
+/* شريط التنقل للأجهزة المحمولة */
+.navbar-light .navbar-toggler {
+  border: none;
+  outline: none;
+}
+
+/* أنماط الشريط العلوي (Navbar) */
+.navbar {
+  background-color: #f8f9fa;
+  padding: 10px;
+}
+
+.navbar-nav .nav-item .nav-link {
+  font-weight: 500;
+  color: #333;
+  transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-item .nav-link:hover {
+  color: #fb774b;
+}
+
+/* زر رئيسي */
+.button-primary {
+  background-color: #fb774b;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button-primary:hover {
+  background-color: #e05a34;
+}
+
+/* زر "تسوق الآن" */
+.shop-now-btn {
+  background-color: #fb774b;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 25px;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 20px;
+}
+
+.shop-now-btn:hover {
+  background-color: #e05a34;
+}
+
+/* قسم العلامات التجارية */
+#brand {
+  padding: 50px 0;
+  background-color: #fff;
+  text-align: center;
+}
+
+#brand .row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#brand img {
+  margin: 10px;
+  max-width: 150px;
+}
+
+/* عرض المنتجات في صف واحد */
+#new .d-flex {
+  gap: 15px;
+}
+
+/* تصميم البادج (عرض خاص) */
+.offer-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: red;
+  color: white;
+  padding: 5px 10px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+/* تأثير تمرير الماوس على المنتج */
+.one {
+  position: relative;
+  transition: 0.3s;
+}
+
+.one:hover .product-img {
+  filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(3);
+}
+
+/* ضبط أبعاد الصور */
+.product-img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+/* تحسينات للأجهزة المحمولة */
+@media (max-width: 768px) {
+  #hero-section {
+    min-height: 50vh;
+    padding: 30px 10px;
+  }
+  #new {
+    padding: 20px;
+  }
+  .one {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  .d-flex {
+    flex-direction: column;
+    align-items: center;
+  }
+  .product-img {
+    height: 250px;
+  }
+  .offer-badge {
+    font-size: 12px;
+    padding: 3px 8px;
+  }
+  .shop-now-btn {
+    font-size: 16px;
+    padding: 10px 20px;
+  }
+  .navbar {
+    padding: 5px;
+  }
+  .navbar-nav {
+    text-align: center;
+  }
+  .navbar-nav .nav-item {
+    margin-bottom: 10px;
+  }
+}
+
+/* أنماط التذييل (Footer) */
+.footer {
+  background-color: #333;
+  color: white;
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+}
+
+.footer a {
+  color: #fb774b;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.footer a:hover {
+  color: #e05a34;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    font-size: 12px;
+    padding: 15px;
+  }
+}
+
+/* تحسينات إضافية للأجهزة المحمولة */
+@media (max-width: 768px) {
+  .product-card {
+      width: 100%;
+      margin: 10px auto;
+  }
+  .product-card img {
+      height: 150px;
+  }
+  .cart-logo {
+      width: 50px;
+      height: 50px;
+      font-size: 16px;
+      padding: 8px;
+  }
+  .cart-badge {
+      font-size: 10px;
+      padding: 3px 6px;
+  }
+  .sale-badge {
+      font-size: 12px;
+      padding: 3px 6px;
+  }
+  .return-btn {
+      width: 100%;
+      font-size: 16px;
+  }
+}
+
+/* أنماط شريط التنقل عند العرض المتوسط */
+@media (max-width: 991px) {
+  .navbar-collapse {
+      position: absolute;
+      width: 100%;
+      top: 100%;
+      left: 0;
+      background: white;
+      z-index: 1000;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      text-align: right;
+  }
+  .navbar-nav {
+      flex-direction: column;
+      padding: 10px 0;
+  }
+  .navbar-nav .nav-item {
+      padding: 5px 15px;
+  }
+}
+
+/* --- تعديل موضع واجهة الدردشة (Voiceflow Chatbot) لتظهر على اليمين --- */
+.vf-widget-container,
+.vf-chat-container {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  left: auto !important;
+  z-index: 9999;
+}
+/* تغيير موقع صندوق الشات */
+.voiceflow-chat-container {
+  bottom: 20px !important;
+  right: 20px !important;
+}
+
+/* تعديل حجم شعار الشات */
+.voiceflow-chat-logo {
+  width: 60px !important;
+  height: auto !important;
+}
+#vf-chat {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+}
+/* تخصيص الكاروسيل للأجهزة المحمولة */
+@media (max-width: 768px) {
+  .carousel-inner {
+    width: 100%;
+    margin: 0 auto;
+  }
+  .carousel-item {
+    padding: 0 10px; /* إضافة مسافة جانبية */
+  }
+  .carousel-control-prev,
+  .carousel-control-next {
+    width: 30px; /* تصغير حجم أزرار التحكم */
+    height: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .carousel-control-prev-icon,
+  .carousel-control-next-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+#bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* يضمن تغطية الشاشة كاملة مع الحفاظ على نسبة العرض للارتفاع */
+  z-index: -1;      /* يضع الفيديو خلف المحتوى */
+}
+

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المتجر</title>
+  <!-- Bootstrap and Font Awesome -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css">
+  <link rel="stylesheet" href="static/style.css">
+  <style>
+    /* Background watermark logo */
+    body::before {
+      content: "";
+      background: url('static/images/logo.png') no-repeat center center;
+      background-size: 50%;
+      opacity: 0.1;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: -1;
+    }
+    /* Sticky Navbar */
+    nav.navbar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1100;
+      background-color: #fff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    /* Spacing for page content under the navbar */
+    .page-container {
+      margin-top: 80px;
+    }
+    /* Product card styling with fade-in/slide-up effect */
+    .product-card {
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      text-align: center;
+      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+      position: relative;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    /* When card enters the viewport, add the animate class */
+    .product-card.animate {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .product-card img {
+      max-width: 100%;
+      height: auto;
+    }
+    /* Category buttons (visible on all pages) */
+    .category-buttons {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .sale-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: red;
+      color: white;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 5px;
+    }
+    .return-btn {
+      display: block;
+      width: 100%;
+      margin: 20px auto;
+      padding: 10px;
+    }
+    /* Cart logo styling */
+    .cart-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background-color: red;
+      color: white;
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 50%;
+    }
+    .cart-logo {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #007bff;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 50%;
+      font-size: 16px;
+      cursor: pointer;
+      z-index: 1200;
+    }
+    .confirmation-message {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #28a745;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 5px;
+      font-size: 14px;
+      z-index: 1200;
+      display: none;
+    }
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .product-card { padding: 8px; }
+      .product-card h5 { font-size: 16px; }
+      .product-card p { font-size: 12px; }
+      .category-buttons .btn { font-size: 12px; padding: 8px; margin: 5px; }
+      .cart-logo { top: 5px; right: 5px; padding: 6px 10px; font-size: 14px; }
+      .cart-badge { font-size: 10px; padding: 2px 6px; }
+      .confirmation-message { font-size: 12px; padding: 6px 12px; }
+      .navbar-brand { font-size: 18px; }
+      .navbar-nav .nav-link { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Confirmation Message when a product is added to cart -->
+  <div id="confirmation-message" class="confirmation-message">✅ تمت إضافة المنتج إلى السلة!</div>
+  <!-- Cart logo with item count -->
+  <div class="cart-logo" onclick="goToCart()">
+    🛒 <span id="cart-count" class="cart-badge">0</span>
+  </div>
+  
+  <!-- Sticky Navbar with Category Dropdown -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="/">متجري</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="/">الصفحة الرئيسية</a></li>
+        <li class="nav-item"><a class="nav-link" href="/shop">المتجر</a></li>
+        <li class="nav-item"><a class="nav-link" href="/cart">السلة <span id="cart-count-nav" class="cart-badge">0</span></a></li>
+        <li class="nav-item"><a class="nav-link" href="/blog">المدونة</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">الفئات</a>
+          <div class="dropdown-menu" aria-labelledby="categoryDropdown">
+            <a class="dropdown-item" href="/shoes">الأحذية</a>
+            <a class="dropdown-item" href="/clothes">الملابس</a>
+            <a class="dropdown-item" href="/watches">الساعات</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  
+  <!-- Hero Section -->
+  <section id="hero-section" class="container">
+    <h1>مرحبًا بكم في MyShop</h1>
+    <p>متجرك الشامل لأفضل المنتجات!</p>
+    <button class="shop-now-btn" onclick="window.location.href='/shop';">تسوق الآن</button>
+  </section>
+  
+  <!-- Brand Section -->
+  <section id="brand" class="container">
+    <div class="row">
+      <img class="img-fluid col-lg-2 col-md-4 col-6" src="{{ url_for('static', filename='img/brand/1.png') }}" alt="Brand 1">
+      <img class="img-fluid col-lg-2 col-md-4 col-6" src="{{ url_for('static', filename='img/brand/2.png') }}" alt="Brand 2">
+      <img class="img-fluid col-lg-2 col-md-4 col-6" src="{{ url_for('static', filename='img/brand/3.png') }}" alt="Brand 3">
+      <img class="img-fluid col-lg-2 col-md-4 col-6" src="{{ url_for('static', filename='img/brand/4.png') }}" alt="Brand 4">
+      <img class="img-fluid col-lg-2 col-md-4 col-6" src="{{ url_for('static', filename='img/brand/5.png') }}" alt="Brand 5">
+      <img class="img-fluid col-lg-2 col-md-4 col-6" src="{{ url_for('static', filename='img/brand/6.png') }}" alt="Brand 6">
+    </div>
+  </section>
+  
+  <!-- Section for New Arrivals -->
+  <section id="new" class="w-100">
+    <div class="d-flex justify-content-center align-items-stretch p-0 m-0">
+      <!-- Product 1 - Extreme Rare Sneakers -->
+      <div class="one col-lg-4 col-md-4 col-12 p-0 position-relative product-card">
+        <span class="offer-badge">عرض خاص!</span>
+        <div class="img-container">
+          <a href="/shop">
+            <img class="img-fluid product-img" src="{{ url_for('static', filename='img/new/1.jpg') }}" alt="Extreme Rare Sneakers">
+            <div class="overlay">تسوق الآن</div>
+          </a>
+        </div>
+        <div class="details">
+          <h2>Extreme Rare Sneakers</h2>
+        </div>
+      </div>
+      
+      <!-- Product 2 - Extreme Rare Clock -->
+      <div class="one col-lg-4 col-md-4 col-12 p-0 product-card">
+        <div class="img-container">
+          <a href="/shop">
+            <img class="img-fluid product-img" src="{{ url_for('static', filename='img/new/2.jpg') }}" alt="Extreme Rare Clock">
+            <div class="overlay">تسوق الآن</div>
+          </a>
+        </div>
+        <div class="details">
+          <h2>Extreme Rare Clock</h2>
+        </div>
+      </div>
+      
+      <!-- Product 3 - Extreme Rare Outfit -->
+      <div class="one col-lg-4 col-md-4 col-12 p-0 product-card">
+        <div class="img-container">
+          <a href="/shop">
+            <img class="img-fluid product-img" src="{{ url_for('static', filename='img/new/3.jpg') }}" alt="Extreme Rare Outfit">
+            <div class="overlay">تسوق الآن</div>
+          </a>
+        </div>
+        <div class="details">
+          <h2>Extreme Rare Outfit</h2>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <footer class="footer">
+    <div class="container">
+      <p>جميع الحقوق محفوظة &copy; 2025 - متجر Fashion</p>
+      <p>📞 هاتف: <a href="tel:+020102297599">+020102297599</a></p>
+      <p>📧 بريد إلكتروني: <a href="mailto:km0848230@gmil.com">km0848230@gmil.com</a></p>
+      <p>📍 العنوان: ة</p>
+    </div>
+  </footer>
+  
+  <script>
+    function toggleMenu() {
+      var menu = document.getElementById("mobileMenu");
+      if (menu && menu.style.display === "block") {
+        menu.style.display = "none";
+      } else if(menu) {
+        menu.style.display = "block";
+      }
+    }
+  </script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+  
+  <!-- Voiceflow Chatbot Code -->
+  <script type="text/javascript">
+    (function(d, t) {
+      var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+      v.onload = function() {
+        window.voiceflow.chat.load({
+          verify: { projectID: '6795ff9352bfdd46f63950fa' },
+          url: 'https://general-runtime.voiceflow.com',
+          versionID: 'production', 
+          voice: { 
+            url: "https://runtime-api.voiceflow.com" 
+          }
+        });
+      }
+      v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs";
+      v.type = "text/javascript";
+      s.parentNode.insertBefore(v, s);
+    })(document, 'script');
+  </script>
+  
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+</body>
+</html>

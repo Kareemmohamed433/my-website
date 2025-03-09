@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>صفحة الدردشة والدعم</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+    /* زر الدردشة الثابت في أسفل اليمين */
+    .chatbot-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 30px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+    /* حاوية الدردشة */
+    .chatbot-container {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 300px;
+      height: 400px;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      display: none; /* مخفية افتراضيًا */ 
+      flex-direction: column;
+      z-index: 1000;
+    }
+    .chatbot-header {
+      background-color: #007bff;
+      color: #fff;
+      padding: 10px;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      text-align: center;
+      font-size: 18px;
+    }
+    .chatbot-body {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+    }
+    .chatbot-input-container {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      flex-wrap: wrap;
+    }
+    .chatbot-input {
+      flex: 1;
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-bottom: 5px;
+    }
+    .chatbot-send {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      margin-left: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    /* أزرار التنقل داخل الدردشة */
+    .chatbot-nav {
+      display: flex;
+      justify-content: space-around;
+      padding: 5px;
+      border-top: 1px solid #ddd;
+      background-color: #f1f1f1;
+    }
+    .chatbot-nav button {
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- محتوى تجريبي للصفحة الرئيسية -->
+  <h1 style="text-align: center; margin-top: 20px;">مرحباً بكم في موقعنا</h1>
+  <p style="text-align: center;">هذه صفحة تجريبية مع واجهة دردشة ودعم.</p>
+  
+  <!-- زر فتح الدردشة -->
+  <button class="chatbot-button" onclick="toggleChat()">💬</button>
+  
+  <!-- حاوية الدردشة -->
+  <div class="chatbot-container" id="chatbotContainer">
+    <div class="chatbot-header">الدردشة والدعم</div>
+    <div class="chatbot-body" id="chatbotBody">
+      <p><strong>الدعم:</strong> مرحباً، كيف يمكنني مساعدتك؟</p>
+    </div>
+    <div class="chatbot-input-container">
+      <input type="text" class="chatbot-input" id="chatbotInput" placeholder="اكتب رسالتك هنا...">
+      <button class="chatbot-send" onclick="sendMessage()">إرسال</button>
+    </div>
+    <!-- أزرار التنقل داخل الدردشة -->  
+    <div class="chatbot-nav">
+      <button onclick="window.location.href='/shop'">المنتجات</button>
+      <button onclick="window.location.href='/category'">التصنيفات</button>
+      <button onclick="window.location.href='/offer'">العروض</button>
+      <button onclick="window.location.href='/support'">الدعم</button>
+    </div>
+  </div>
+  
+  <script>
+    // دالة تبديل ظهور/إخفاء حاوية الدردشة
+    function toggleChat() {
+      var container = document.getElementById("chatbotContainer");
+      if (container.style.display === "none" || container.style.display === "") {
+        container.style.display = "flex";
+      } else {
+        container.style.display = "none";
+      }
+    }
+    
+    // دالة إرسال الرسالة وإضافة رد افتراضي من الدعم
+    function sendMessage() {
+      var input = document.getElementById("chatbotInput");
+      var message = input.value.trim();
+      if (message !== "") {
+        var chatbotBody = document.getElementById("chatbotBody");
+        // عرض رسالة المستخدم
+        var userMessage = document.createElement("p");
+        userMessage.innerHTML = "<strong>أنت:</strong> " + message;
+        chatbotBody.appendChild(userMessage);
+        input.value = "";
+        // رد افتراضي من الدعم بعد ثانية واحدة (يمكنك تعديله وفقًا لاحتياجاتك)
+        setTimeout(function() {
+          var reply = document.createElement("p");
+          reply.innerHTML = "<strong>الدعم:</strong> شكرًا لرسالتك، سنرد عليك قريبًا.";
+          chatbotBody.appendChild(reply);
+          chatbotBody.scrollTop = chatbotBody.scrollHeight;
+        }, 1000);
+      }
+    }
+  </script>
+</body>
+</html>
