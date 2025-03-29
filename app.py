@@ -44,8 +44,14 @@ CORS(app, resources={
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Connect to MongoDB
-MONGO_CONNECTION_STRING = "mongodb+srv://km0848230:5C4s8HSfEjfphlX5@cluster0.6rbbd.mongodb.net/mydatabase?retryWrites=true&w=majority"
+# Connect to MongoDB using environment variable
+MONGO_CONNECTION_STRING = os.getenv('mydatabase', '').strip()
+if not MONGO_CONNECTION_STRING:
+    logger.error("MongoDB connection string not found in environment variables!")
+    # يمكنك إيقاف التشغيل أو اتخاذ إجراء بديل هنا، مثل:
+    import sys
+    sys.exit(1)
+
 client = MongoClient(MONGO_CONNECTION_STRING, tlsCAFile=certifi.where())
 db = client["mydatabase"]
 products_collection = db["products"]
@@ -53,6 +59,7 @@ orders_collection = db["orders"]
 users_collection = db["users"]
 cart_collection = db["carts"]
 complaints_collection = db["complaints"]
+
 logger.info("✅ Successfully connected to MongoDB!")
 
 # Update 'kareem' to admin role (run once)
@@ -88,8 +95,8 @@ def send_whatsapp_message(to_number, message):
         return False
 
 # Initialize Firebase
-cred = credentials.Certificate("C:/Users/HP/Desktop/Build-Ecommerce-Website-With-HTML-CSS-JavaScript-main/web-site-of-market-firebase-adminsdk-fbsvc-7197b01469.json")
-firebase_admin.initialize_app(cred)
+# cred = credentials.Certificate("C:/Users/HP/Desktop/Build-Ecommerce-Website-With-HTML-CSS-JavaScript-main/web-site-of-market-firebase-adminsdk-fbsvc-7197b01469.json")
+# firebase_admin.initialize_app(cred)
 
 # Token required decorator
 def token_required(f):
