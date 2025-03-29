@@ -1,281 +1,730 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
-    <meta charset="UTF-8">
-    <title>الزيوت</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
-    <style>
-        /* Background watermark logo */
-        body::before {
-            content: "";
-            background: url('static/images/logo.png') no-repeat center center;
-            background-size: 50%;
-            opacity: 0.1;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: -1;
-        }
-
-        /* Sticky Navbar */
-        nav.navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1100;
-            background-color: #fff;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Spacing for page content under the navbar */
-        .page-container {
-            margin-top: 80px;
-        }
-
-        /* Product card styling with fade-in/slide-up effect */
-        .product-card {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-            position: relative;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
-        }
-
-        /* When card enters the viewport, add the animate class */
-        .product-card.animate {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .product-card img {
-            max-width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-
-        .sale-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: red;
-            color: white;
-            padding: 5px 10px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 5px;
-        }
-
-        .return-btn {
-            display: block;
-            width: 200px;
-            margin: 20px auto;
-        }
-
-        .cart-logo {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #007bff;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 50%;
-            font-size: 18px;
-            cursor: pointer;
-            z-index: 1200;
-        }
-
-        .cart-badge {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: red;
-            color: white;
-            font-size: 12px;
-            padding: 5px 10px;
-            border-radius: 50%;
-        }
-
-        .confirmation-message {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #28a745;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 16px;
-            z-index: 1200;
-            display: none;
-        }
-
-        /* Category buttons (visible on all pages) */
-        .category-buttons {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        /* Active menu item */
-        .nav-item.active .nav-link {
-            color: #007bff !important;
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الملابس - متجري</title>
+  <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      color: #fff;
+      background-color: #000;
+      font-family: 'Cairo', sans-serif;
+    }
+    body::before {
+      content: "";
+      background: url('/static/images/logo.png') no-repeat center center;
+      background-size: 50%;
+      opacity: 0.1;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: -1;
+    }
+    nav.navbar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1100;
+      background: linear-gradient(45deg, #ff0000, #000000);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      padding: 10px;
+      transition: all 0.3s ease;
+    }
+    .navbar-light .navbar-toggler {
+      border: none;
+      outline: none;
+      color: #fff;
+    }
+    .navbar-nav .nav-item .nav-link {
+      font-weight: 500;
+      color: #fff;
+      transition: all 0.3s ease;
+      padding: 10px 15px;
+    }
+    .navbar-nav .nav-item .nav-link:hover {
+      color: #ff6666;
+      transform: scale(1.1);
+    }
+    .navbar-collapse {
+      transition: all 0.5s ease;
+    }
+    .navbar-brand img {
+      max-width: 40px;
+      height: auto;
+      margin-left: 10px;
+      animation: bounceIn 1s ease-out;
+      position: relative;
+      z-index: 1200;
+    }
+    @media (max-width: 991px) {
+      .navbar-collapse {
+        background: rgba(0, 0, 0, 0.95);
+        position: absolute;
+        top: 100%;
+        right: 0;
+        width: 100%;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s ease-in-out, opacity 0.3s ease;
+        opacity: 0;
+      }
+      .navbar-collapse.show {
+        max-height: 500px;
+        opacity: 1;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+      }
+      .navbar-nav .nav-item {
+        opacity: 0;
+        transform: translateX(20px);
+        transition: all 0.3s ease;
+      }
+      .navbar-collapse.show .nav-item {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      .navbar-nav .nav-item:nth-child(1) { transition-delay: 0.1s; }
+      .navbar-nav .nav-item:nth-child(2) { transition-delay: 0.2s; }
+      .navbar-nav .nav-item:nth-child(3) { transition-delay: 0.3s; }
+      .navbar-nav .nav-item:nth-child(4) { transition-delay: 0.4s; }
+      .navbar-nav .nav-item:nth-child(5) { transition-delay: 0.5s; }
+    }
+    .page-container {
+      margin-top: 80px;
+      padding: 20px;
+    }
+    .main-content h2 {
+      color: #fff;
+      animation: fadeInDown 1s ease-out;
+      text-align: center;
+      margin-bottom: 30px;
+      font-weight: bold;
+    }
+    .products-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+    .product-card {
+      border: none;
+      padding: 20px;
+      text-align: center;
+      margin: 20px 0;
+      border-radius: 10px;
+      background: #2a2828;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      position: relative;
+      opacity: 0;
+      transform: translateY(50px) scale(0.95);
+      transition: all 0.6s ease;
+      height: 450px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      overflow: hidden;
+      flex: 0 0 calc(33.33% - 20px);
+      max-width: calc(33.33% - 20px);
+    }
+    .product-card.animate {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      animation: bounceIn 0.8s ease-out;
+    }
+    .product-card:hover {
+      transform: scale(1.03);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    .product-image-container {
+      position: relative;
+      max-width: 100%;
+      height: 250px;
+      overflow: hidden;
+      border-radius: 10px;
+      border: 2px solid #ff0000;
+    }
+    .product-image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease, opacity 0.3s ease;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    .product-image-container img.active {
+      opacity: 1;
+      z-index: 1;
+    }
+    .product-image-container img:not(.active) {
+      opacity: 0;
+      z-index: 0;
+    }
+    .product-card:hover .product-image-container img.active {
+      transform: scale(1.08) rotate(2deg);
+    }
+    .product-card h5 {
+      font-weight: bold;
+      margin: 10px 0;
+      font-size: 16px;
+      color: #fff;
+      transition: color 0.3s ease, transform 0.3s ease;
+      flex-grow: 1;
+    }
+    .product-card:hover h5 {
+      color: #ff6666;
+      transform: translateY(-5px);
+    }
+    .product-card p {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .product-card del {
+      color: #ff0000;
+      font-size: 20px;
+    }
+    .product-card strong {
+      color: #fff;
+      font-size: 24px;
+    }
+    .add-to-cart-btn {
+      font-size: 20px;
+      padding: 8px 15px;
+      background-color: #ff0000;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      transition: all 0.3s ease;
+      width: 100%;
+      max-width: 150px;
+      margin: 0 auto;
+    }
+    .add-to-cart-btn:hover {
+      background-color: #cc0000;
+      transform: scale(1.1) rotate(5deg);
+    }
+    .sale-badge {
+      display: block;
+      margin-top: 10px;
+      background: #ff0000;
+      color: #fff;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      animation: bounce 1.5s infinite;
+      text-align: center;
+      width: 70%;
+      max-width: 150px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .best-seller-badge {
+      display: block;
+      margin-top: 5px;
+      background: #28a745;
+      color: #fff;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      animation: bounce 1.5s infinite;
+      text-align: center;
+      width: 50%;
+      max-width: 100px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .return-btn {
+      display: block;
+      width: 220px;
+      margin: 30px auto;
+      padding: 12px;
+      border-radius: 25px;
+      background: #ff0000;
+      color: #fff;
+      border: none;
+      transition: all 0.3s ease;
+    }
+    .return-btn:hover {
+      animation: pulse 1s infinite;
+      background: #cc0000;
+    }
+    .cart-logo {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #ff0000;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      z-index: 1200;
+      transition: all 0.4s ease;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+      touch-action: none;
+    }
+    .cart-logo:hover {
+      background: #cc0000;
+      transform: scale(1.15) rotate(10deg);
+    }
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #28a745;
+      color: #fff;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 50%;
+    }
+    .confirmation-message {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #ff0000;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 5px;
+      font-size: 14px;
+      z-index: 1200;
+      display: none;
+      animation: slideIn 0.5s ease-out;
+    }
+    .simulation-message {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #ff6666;
+      color: #000;
+      padding: 12px 25px;
+      border-radius: 25px;
+      font-size: 16px;
+      z-index: 1200;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
+    @media (max-width: 768px) {
+      .product-card {
+        flex: 0 0 calc(50% - 20px);
+        max-width: calc(50% - 20px);
+        padding: 10px;
+        margin: 10px 0;
+        height: 400px;
+      }
+      .product-image-container {
+        height: 200px;
+      }
+      .product-card h5 {
+        font-size: 14px;
+      }
+      .add-to-cart-btn {
+        font-size: 16px;
+        padding: 6px 12px;
+      }
+      .product-card del {
+        font-size: 16px;
+      }
+      .product-card strong {
+        font-size: 18px;
+      }
+      .sale-badge {
+        font-size: 10px;
+        padding: 4px 6px;
+      }
+      .best-seller-badge {
+        font-size: 10px;
+        padding: 4px 6px;
+      }
+      .confirmation-message {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+      .return-btn {
+        width: 180px;
+        font-size: 14px;
+      }
+      .cart-logo {
+        padding: 12px 16px;
+        font-size: 18px;
+      }
+      .simulation-message {
+        width: 90%;
+        font-size: 14px;
+      }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translate(-50%, -20px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-10px); }
+      60% { transform: translateY(-5px); }
+    }
+    @keyframes bounceIn {
+      0% { opacity: 0; transform: translateY(-30px) scale(0.9); }
+      60% { opacity: 1; transform: translateY(5px) scale(1.05); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+  </style>
 </head>
-
 <body>
-    <!-- Confirmation Message when a product is added to cart -->
-    <div id="confirmation-message" class="confirmation-message">✅ تمت إضافة المنتج إلى السلة!</div>
+  <div id="confirmation-message" class="confirmation-message">✅ تمت إضافة المنتج إلى السلة!</div>
+  <div class="simulation-message">هذه صفحة محاكاة للتجربة فقط - الأسعار والعروض غير حقيقية</div>
+  <div class="cart-logo" id="cartLogo" onclick="goToCart()"> 🛒 <span id="cart-count" class="cart-badge">0</span> </div>
 
-    <!-- Cart logo with item count -->
-    <div class="cart-logo" onclick="goToCart()"> 🛒 <span id="cart-count" class="cart-badge">0</span> </div>
-
-    <!-- Sticky Navbar (Header) -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="/">متجري</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-              <li class="nav-item"><a class="nav-link" href="/">الصفحة الرئيسية</a></li>
-              <li class="nav-item"><a class="nav-link" href="/shop">المتجر</a></li>
-              <li class="nav-item"><a class="nav-link" href="/cart">السلة <span id="cart-count-nav" class="cart-badge">0</span></a></li>
-              <li class="nav-item"><a class="nav-link" href="/blog">المدونة</a></li>
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">الفئات</a>
-                <div class="dropdown-menu" aria-labelledby="categoryDropdown">
-                  <a class="dropdown-item" href="/shoes">الأحذية</a>
-                  <a class="dropdown-item" href="/clothes">الملابس</a>
-                  <a class="dropdown-item" href="/watches">الساعات</a>
-                </div>
-              </li>
-            </ul>
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <a class="navbar-brand" href="/">
+      <img src="/static/img/logo1.png" alt="Logo"> متجري
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="/">الصفحة الرئيسية</a></li>
+        <li class="nav-item"><a class="nav-link" href="/shop">المتجر</a></li>
+        <li class="nav-item"><a class="nav-link" href="/cart">السلة <span id="cart-count-nav" class="cart-badge">0</span></a></li>
+        <li class="nav-item"><a class="nav-link" href="/blog">المدونة</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown" role="button" data-toggle="dropdown">الفئات</a>
+          <div class="dropdown-menu" aria-labelledby="categoryDropdown">
+            <a class="dropdown-item" href="/shoes">الأحذية</a>
+            <a class="dropdown-item" href="/clothes">الملابس</a>
+            <a class="dropdown-item" href="/watches">الساعات</a>
           </div>
-        </nav>>
-
-    <!-- Category Buttons (displayed on all pages) -->
-    <div class="category-buttons">
-        <a href="/shoes" class="btn btn-primary">عرض الأحذية</a>
-        <a href="/clothes" class="btn btn-success">عرض الملابس</a>
-        <a href="/watches" class="btn btn-warning">⌚ عرض الساعات</a>
+        </li>
+      </ul>
     </div>
+  </nav>
 
-    <!-- Main Content -->
-    <div class="container page-container">
-        <h2 class="text-center"> جميع الزيوت</h2>
-        <div class="row" id="clothes-list"></div>
-        <button class="btn btn-secondary return-btn" onclick="goToHome()">🏠 العودة إلى الصفحة الرئيسية</button>
+  <div class="page-container">
+    <div class="main-content">
+      <h2>جميع الملابس</h2>
+      <div class="products-row" id="products-list">
+        <div class="loading-message">جارٍ تحميل المنتجات...</div>
+      </div>
+      <button class="btn return-btn" onclick="goToHome()">🏠 العودة إلى الصفحة الرئيسية</button>
     </div>
+  </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            fetch("/api/products?category=clothing")
-                .then(response => response.json())
-                .then(products => {
-                    console.log("✅ المنتجات المسترجعة:", products);
-                    const clothesContainer = document.getElementById("clothes-list");
-                    clothesContainer.innerHTML = "";
-                    products.sort((a, b) => (b.discount || 0) - (a.discount || 0));
-                    products.forEach(product => {
-                        let discountPrice = product.discount
-                            ? product.finalPrice.toFixed(2)
-                            : product.price;
-                        let offerBadge = product.discount
-                            ? `<span class="sale-badge">🔴 خصم ${product.discount}%</span>`
-                            : "";
-                        let productHTML = `
-                            <div class="col-md-4">
-                                <div class="product-card">
-                                    ${offerBadge}
-                                    <img src="${product.image}" alt="${product.name}">
-                                    <h5>${product.name}</h5>
-                                    <p>${product.description}</p>
-                                    ${product.discount ? `<p><del style="color:red; font-weight:bold;">💲 $${product.price}</del> <strong style="color:green;">💲 $${discountPrice}</strong></p>` : `<p>💲 السعر: $${product.price}</p>`}
-                                    <button class="btn btn-primary" onclick="addToCart('${product._id}')">🛒 أضف إلى السلة</button>
-                                </div>
-                            </div>`;
-                        clothesContainer.innerHTML += productHTML;
-                    });
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const productsContainer = document.getElementById("products-list");
 
-                    // Activate IntersectionObserver for dynamic appearance of product cards
-                    let productCards = document.querySelectorAll('.product-card');
-                    const observerOptions = { threshold: 0.3 };
-                    const observer = new IntersectionObserver((entries, observer) => {
-                        entries.forEach(entry => {
-                            if (entry.isIntersecting) {
-                                entry.target.classList.add('animate');
-                                observer.unobserve(entry.target);
-                            }
-                        });
-                    }, observerOptions);
-                    productCards.forEach(card => observer.observe(card));
-                })
-                .catch(error => console.error("❌ خطأ في جلب المنتجات:", error));
+      fetch("/api/products?category=clothing")
+        .then(response => {
+          if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+          return response.json();
+        })
+        .then(products => {
+          productsContainer.innerHTML = "";
 
-            updateCartCount();
-            highlightActiveMenu();
+          if (!Array.isArray(products) || products.length === 0) {
+            productsContainer.innerHTML = `<p class="text-center">لا توجد ملابس متاحة حاليًا</p>`;
+            return;
+          }
+
+          products.sort((a, b) => {
+            const aHasDiscount = a.discount && a.discount > 0;
+            const bHasDiscount = b.discount && b.discount > 0;
+            if (aHasDiscount && !bHasDiscount) return -1;
+            if (!aHasDiscount && bHasDiscount) return 1;
+            return 0;
+          });
+
+          products.forEach(product => {
+            const discountPrice = product.discount
+              ? (product.price - (product.price * product.discount / 100)).toFixed(2)
+              : product.price;
+            const offerBadge = product.discount
+              ? `<span class="sale-badge">${product.discount}% خصم!</span>`
+              : "";
+            const images = Array.isArray(product.images) && product.images.length > 0
+              ? product.images
+              : [product.image || '/static/images/placeholder.png'];
+
+            let imageHTML = `<div class="product-image-container">`;
+            if (images.length > 1) {
+              images.forEach((img, index) => {
+                imageHTML += `<img src="${img}" alt="${product.name}" class="${index === 0 ? 'active' : ''}">`;
+              });
+            } else {
+              imageHTML += `<img src="${images[0]}" alt="${product.name}" class="active">`;
+            }
+            imageHTML += `</div>`;
+
+            const productHTML = `
+              <div class="product-card" data-id="${product.id}">
+                ${imageHTML}
+                ${offerBadge}
+                <h5>${product.name || 'اسم غير متوفر'}</h5>
+                <p>
+                  ${discountPrice !== product.price
+                    ? `<del>L.E ${product.price}</del> <strong>L.E ${discountPrice}</strong>`
+                    : `<strong>L.E ${product.price}</strong>`}
+                </p>
+                <button class="add-to-cart-btn" onclick="event.stopPropagation(); addToCart('${product.id}')">
+                  🛒 أضف إلى السلة
+                </button>
+              </div>`;
+            productsContainer.innerHTML += productHTML;
+          });
+
+          fetch("/api/best_selling")
+            .then(res => res.ok ? res.json() : [])
+            .then(bestSellers => {
+              const bestSellerIds = bestSellers.map(p => p.id);
+              document.querySelectorAll('.product-card').forEach(card => {
+                const productId = card.getAttribute("data-id");
+                if (bestSellerIds.includes(productId)) {
+                  const nameElement = card.querySelector('h5');
+                  nameElement.insertAdjacentHTML('beforebegin', `<span class="best-seller-badge">الأكثر مبيعاً</span>`);
+                }
+                card.addEventListener('click', () => openProductPage(productId));
+              });
+            })
+            .catch(error => console.warn("Best selling fetch error:", error));
+
+          const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('animate');
+                observer.unobserve(entry.target);
+              }
+            });
+          }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+          document.querySelectorAll('.product-card').forEach(card => observer.observe(card));
+
+          document.querySelectorAll('.product-card').forEach(card => {
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchMoved = false;
+
+            card.addEventListener('touchstart', (e) => {
+              touchStartX = e.touches[0].clientX;
+              touchStartY = e.touches[0].clientY;
+              touchMoved = false;
+              e.stopPropagation();
+            });
+
+            card.addEventListener('touchmove', (e) => {
+              const touchX = e.touches[0].clientX;
+              const touchY = e.touches[0].clientY;
+              const diffX = touchX - touchStartX;
+              const diffY = touchY - touchStartY;
+
+              if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                const imageContainer = card.querySelector('.product-image-container');
+                if (imageContainer && imageContainer.querySelectorAll('img').length > 1) {
+                  const images = imageContainer.querySelectorAll('img');
+                  let currentIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
+                  images[currentIndex].classList.remove('active');
+                  if (diffX > 0) {
+                    currentIndex = (currentIndex - 1 + images.length) % images.length;
+                  } else {
+                    currentIndex = (currentIndex + 1) % images.length;
+                  }
+                  images[currentIndex].classList.add('active');
+                  touchMoved = true;
+                }
+              }
+              e.stopPropagation();
+            });
+
+            card.addEventListener('touchend', (e) => {
+              const touchEndX = e.changedTouches[0].clientX;
+              const touchEndY = e.changedTouches[0].clientY;
+              const diffX = touchEndX - touchStartX;
+              const diffY = touchEndY - touchStartY;
+
+              if (!touchMoved && Math.abs(diffX) < 20 && Math.abs(diffY) < 20) {
+                const productId = card.getAttribute('data-id');
+                openProductPage(productId);
+              }
+              e.stopPropagation();
+            });
+          });
+        })
+        .catch(error => {
+          console.error("❌ خطأ في جلب المنتجات:", error.message);
+          productsContainer.innerHTML = `
+            <p class="text-center">❌ حدث خطأ أثناء تحميل الملابس: ${error.message}</p>`;
         });
 
-        function addToCart(productId) {
-            let cart = JSON.parse(localStorage.getItem("cart")) || [];
-            let existingProduct = cart.find(item => item.id === productId);
-            if (existingProduct) {
-                existingProduct.quantity++;
-            } else {
-                cart.push({ id: productId, quantity: 1 });
-            }
-            localStorage.setItem("cart", JSON.stringify(cart));
-            updateCartCount();
-            showConfirmationMessage();
-        }
+      fetchCartCountFromServer();
+      setupDraggableCart();
+      highlightActiveMenu();
+    });
 
-        function updateCartCount() {
-            let cart = JSON.parse(localStorage.getItem("cart")) || [];
-            let cartCount = cart.reduce((total, item) => total + item.quantity, 0);
-            document.getElementById("cart-count").innerText = cartCount;
-            let navCartCount = document.getElementById("cart-count-nav");
-            if (navCartCount) { navCartCount.innerText = cartCount; }
-        }
+    function setupDraggableCart() {
+      const cartLogo = document.getElementById("cartLogo");
+      let isDragging = false;
+      let startX, startY, initialX, initialY;
 
-        function showConfirmationMessage() {
-            const messageElement = document.getElementById("confirmation-message");
-            messageElement.style.display = "block";
-            setTimeout(() => { messageElement.style.display = "none"; }, 3000);
-        }
+      cartLogo.addEventListener('mousedown', startDrag);
+      document.addEventListener('mousemove', drag);
+      document.addEventListener('mouseup', endDrag);
 
-        function goToCart() {
-            window.location.href = "/cart";
-        }
+      cartLogo.addEventListener('touchstart', startDragTouch);
+      document.addEventListener('touchmove', dragTouch);
+      document.addEventListener('touchend', endDrag);
 
-        function goToHome() {
-            window.location.href = "/";
-        }
+      function startDrag(e) {
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        initialX = cartLogo.offsetLeft;
+        initialY = cartLogo.offsetTop;
+        e.preventDefault();
+      }
 
-        function highlightActiveMenu() {
-            const currentPage = window.location.pathname;
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => {
-                const link = item.querySelector('.nav-link');
-                if (link.getAttribute('href') === currentPage) {
-                    item.classList.add('active');
-                }
-            });
-        }
-    </script>
+      function startDragTouch(e) {
+        isDragging = true;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        initialX = cartLogo.offsetLeft;
+        initialY = cartLogo.offsetTop;
+        e.preventDefault();
+      }
 
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+      function drag(e) {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        cartLogo.style.left = (initialX + dx) + 'px';
+        cartLogo.style.top = (initialY + dy) + 'px';
+      }
+
+      function dragTouch(e) {
+        if (!isDragging) return;
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        cartLogo.style.left = (initialX + dx) + 'px';
+        cartLogo.style.top = (initialY + dy) + 'px';
+      }
+
+      function endDrag() {
+        isDragging = false;
+      }
+    }
+
+    function addToCart(productId) {
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+      let existingProduct = cart.find(item => item.id === productId);
+      if (existingProduct) {
+        existingProduct.quantity++;
+      } else {
+        cart.push({ id: productId, quantity: 1 });
+      }
+      localStorage.setItem("cart", JSON.stringify(cart));
+
+      fetch("/api/store_cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify([{ id: productId, quantity: 1 }])
+      })
+        .then(response => response.json())
+        .then(() => {
+          fetchCartCountFromServer();
+          showConfirmationMessage();
+        })
+        .catch(error => {
+          console.error("خطأ في إضافة المنتج إلى السلة:", error.message);
+          updateCartCount();
+          showConfirmationMessage();
+        });
+    }
+
+    function fetchCartCountFromServer() {
+      fetch("/api/cart/count")
+        .then(response => {
+          if (!response.ok) throw new Error("فشل في جلب عدد العناصر");
+          return response.json();
+        })
+        .then(data => {
+          const cartCount = data.count || 0;
+          document.getElementById("cart-count").innerText = cartCount;
+          document.getElementById("cart-count-nav").innerText = cartCount;
+        })
+        .catch(error => {
+          console.error("خطأ في جلب عدد السلة:", error.message);
+          updateCartCount();
+        });
+    }
+
+    function updateCartCount() {
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+      let cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+      document.getElementById("cart-count").innerText = cartCount;
+      let navCartCount = document.getElementById("cart-count-nav");
+      if (navCartCount) navCartCount.innerText = cartCount;
+    }
+
+    function showConfirmationMessage() {
+      const messageElement = document.getElementById("confirmation-message");
+      messageElement.style.display = "block";
+      setTimeout(() => messageElement.style.display = "none", 3000);
+    }
+
+    function openProductPage(productId) {
+      window.location.href = `/product/${productId}`;
+    }
+
+    function goToCart() {
+      window.location.href = "/cart";
+    }
+
+    function goToHome() {
+      window.location.href = "/";
+    }
+
+    function highlightActiveMenu() {
+      const currentPage = window.location.pathname;
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(item => {
+        const link = item.querySelector('.nav-link');
+        if (link.getAttribute('href') === currentPage) {
+          item.classList.add('active');
+        }
+      });
+    }
+  </script>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
 </body>
-
 </html>

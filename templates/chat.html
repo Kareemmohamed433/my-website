@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Shop Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        .chat-container {
+            width: 400px;
+            height: 500px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 20px;
+        }
+        .chat-body {
+            padding: 15px;
+            height: 350px;
+            overflow-y: auto;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #e9ecef;
+        }
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .option-btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .option-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">My Shop Chatbot</div>
+        <div class="chat-body" id="chatBody">
+            <div class="message">Welcome to My Shop!</div>
+        </div>
+        <div class="options" id="options">
+            <button class="option-btn" onclick="showOrders()">Orders</button>
+            <button class="option-btn" onclick="showSupport()">Support</button>
+            <button class="option-btn" onclick="showProducts()">Products</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBody = document.getElementById('chatBody');
+
+        function addMessage(text) {
+            const message = document.createElement('div');
+            message.classList.add('message');
+            message.textContent = text;
+            chatBody.appendChild(message);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function clearOptions() {
+            document.getElementById('options').innerHTML = '';
+        }
+
+        function showOrders() {
+            clearOptions();
+            addMessage('Your Orders: No recent orders yet.');
+        }
+
+        function showSupport() {
+            clearOptions();
+            addMessage('Contact us at support@myshop.com or call +123-456-7890.');
+        }
+
+        function showProducts() {
+            clearOptions();
+            addMessage('Our Products:');
+            const products = [
+                { name: 'Product 1', desc: 'Cool item - $10' },
+                { name: 'Product 2', desc: 'Awesome gadget - $20' }
+            ];
+            products.forEach(product => {
+                const btn = document.createElement('button');
+                btn.classList.add('option-btn');
+                btn.textContent = product.name;
+                btn.onclick = () => addMessage(product.desc);
+                document.getElementById('options').appendChild(btn);
+            });
+        }
+    </script>
+</body>
+</html>

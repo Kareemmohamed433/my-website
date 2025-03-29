@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تعديل المنتج - لوحة الإدارة</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: #ffffff;
+      font-family: 'Cairo', sans-serif;
+      min-height: 100vh;
+    }
+    .navbar {
+      background: rgba(237, 228, 228, 0.9);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .container {
+      margin-top: 50px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      color: #333;
+      padding: 20px;
+    }
+    .section-title {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .form-group label {
+      font-weight: bold;
+    }
+    .form-control, .form-control-file {
+      background-color: #f8f9fa;
+      border: 1px solid #ced4da;
+    }
+    .btn-save {
+      background-color: #28a745;
+      color: #fff;
+      transition: all 0.3s ease;
+    }
+    .btn-save:hover {
+      background-color: #218838;
+      transform: scale(1.05);
+    }
+    .btn-delete-comment {
+      background-color: #dc3545;
+      color: #fff;
+      transition: all 0.3s ease;
+    }
+    .btn-delete-comment:hover {
+      background-color: #c82333;
+      transform: scale(1.05);
+    }
+    .product-img {
+      width: 200px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 2px solid #ddd;
+      margin: 10px;
+    }
+    .progress {
+      height: 20px;
+      border-radius: 10px;
+    }
+    .progress-bar {
+      background-color: #28a745;
+    }
+    .rating-stars {
+      color: #ffc107;
+      font-size: 20px;
+    }
+    .comment-list {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 20px;
+    }
+    .comment-item {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .high-stock-alert {
+      color: #ff0000;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .image-gallery {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .image-actions {
+      position: relative;
+      display: inline-block;
+      margin: 5px;
+    }
+    .image-actions img {
+      cursor: pointer;
+      transition: transform 0.3s;
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+    }
+    .image-actions img:hover {
+      transform: scale(1.05);
+    }
+    .delete-image-btn {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .set-main-btn {
+      position: absolute;
+      bottom: 5px;
+      left: 5px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 2px 5px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .main-image-badge {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: #ffc107;
+      color: #000;
+      padding: 2px 5px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      display: none;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <a class="navbar-brand" href="#">لوحة الإدارة</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item"><a class="nav-link" href="/analysis.html">📊 تحليل</a></li>
+        <li class="nav-item"><a class="nav-link" href="/add-product.html">➕ إضافة منتج</a></li>
+        <li class="nav-item"><a class="nav-link" href="/delete-product.html">🗑️ حذف منتج</a></li>
+        <li class="nav-item active"><a class="nav-link" href="/edit-product.html">✏️ تعديل منتج</a></li>
+        <li class="nav-item"><a class="nav-link" href="/orders.html">📦 الطلبات</a></li>
+        <li class="nav-item"><a class="nav-link" href="/users.html">👤 المستخدمون</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">تسجيل خروج</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="container">
+    <h1 class="section-title">✏️ تعديل المنتج</h1>
+    <div class="card">
+      <div class="row">
+        <div class="col-md-6">
+          <img id="product-image" src="/static/img/default.jpg" alt="صورة المنتج" class="product-img">
+          <div class="form-group">
+            <label for="image-upload">تغيير الصورة الرئيسية</label>
+            <input type="file" class="form-control-file" id="image-upload" accept="image/*">
+            <div id="main-image-preview-container" style="margin-top: 10px;"></div>
+          </div>
+          <div class="form-group">
+            <label for="images-upload">إضافة صور إضافية</label>
+            <input type="file" class="form-control-file" id="images-upload" accept="image/*" multiple>
+            <div id="additional-images-preview-container" style="margin-top: 10px;"></div>
+          </div>
+          <div class="form-group">
+            <label>معرض الصور الحالية</label>
+            <div id="image-gallery" class="image-gallery"></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="name">اسم المنتج</label>
+            <input type="text" class="form-control" id="name" placeholder="اسم المنتج">
+          </div>
+          <div class="form-group">
+            <label for="price">السعر</label>
+            <input type="number" class="form-control" id="price" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label for="discount">الخصم (%)</label>
+            <input type="number" class="form-control" id="discount" min="0" max="100">
+          </div>
+          <div class="form-group">
+            <label for="amount">الكمية المتاحة</label>
+            <input type="number" class="form-control" id="amount" min="0">
+          </div>
+          <div id="high-stock-alert" class="high-stock-alert" style="display: none;">⚠️ كمية عالية (أكثر من 4)</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="description">وصف المنتج</label>
+        <textarea class="form-control" id="description" rows="3" placeholder="وصف المنتج"></textarea>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <label>المبيعات</label>
+          <div class="progress">
+            <div id="sales-progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+          </div>
+          <p id="total-sales" class="mt-2">إجمالي المبيعات: 0</p>
+        </div>
+        <div class="col-md-6">
+          <label>التقييم</label>
+          <div id="rating-stars" class="rating-stars"></div>
+          <small id="rating-count" class="text-muted">(0 تقييمات)</small>
+        </div>
+      </div>
+      <div class="form-group comment-list">
+        <label>التعليقات والتقييمات</label>
+        <div id="comments-container"></div>
+      </div>
+      <button class="btn btn-save btn-block mt-3" onclick="saveProduct()">
+        <i class="fas fa-save"></i> حفظ التغييرات
+      </button>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+  <script src="https://燦tackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+    const BASE_URL = window.location.origin;
+    let productId = new URLSearchParams(window.location.search).get('id');
+    let currentProduct = null;
+
+    function checkAuth() {
+      showLoading();
+      fetch(`${BASE_URL}/api/check_auth`, { credentials: 'include' })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('غير مسجل');
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (!data.authenticated || data.role !== 'admin') {
+            window.location.href = '/login.html';
+          } else {
+            fetchProduct();
+          }
+        })
+        .catch(() => {
+          window.location.href = '/login.html';
+        })
+        .finally(() => hideLoading());
+    }
+
+    function showLoading() {
+      document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    function fetchProduct() {
+      showLoading();
+      if (!productId) {
+        alert('لم يتم تحديد منتج!');
+        window.location.href = '/analysis.html';
+        return;
+      }
+
+      fetch(`${BASE_URL}/api/products`, { credentials: 'include' })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('خطأ في جلب المنتجات');
+          }
+          return response.json();
+        })
+        .then(products => {
+          const product = products.find(p => p.id === productId);
+          if (!product) {
+            throw new Error('المنتج غير موجود');
+          }
+          
+          currentProduct = product;
+          renderProduct(product);
+          
+          return fetch(`${BASE_URL}/api/orders`, { credentials: 'include' });
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('خطأ في جلب الطلبات');
+          }
+          return response.json();
+        })
+        .then(orders => {
+          updateSalesData(currentProduct, orders);
+        })
+        .catch(error => {
+          console.error('خطأ:', error);
+          alert('حدث خطأ أثناء جلب البيانات: ' + error.message);
+          window.location.href = '/analysis.html';
+        })
+        .finally(() => hideLoading());
+    }
+
+    function renderProduct(product) {
+      const mainImage = product.image || 
+                       (product.images && product.images.length > 0 ? product.images[0] : '/static/img/default-product.jpg');
+      document.getElementById('product-image').src = mainImage;
+      
+      const gallery = document.getElementById('image-gallery');
+      gallery.innerHTML = '';
+      
+      if (product.images && product.images.length > 0) {
+        product.images.forEach((imgSrc, index) => {
+          const imgContainer = document.createElement('div');
+          imgContainer.className = 'image-actions';
+          
+          const img = document.createElement('img');
+          img.src = imgSrc;
+          img.className = 'product-img';
+          img.alt = 'صورة المنتج';
+          img.onerror = () => { img.src = '/static/img/default-product.jpg'; };
+          
+          const label = document.createElement('p');
+          label.style.textAlign = 'center';
+          label.textContent = imgSrc === product.image ? 'رئيسية' : '';
+          
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'delete-image-btn';
+          deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+          deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            deleteImage(index);
+          };
+          
+          const setMainBtn = document.createElement('button');
+          setMainBtn.className = 'set-main-btn';
+          setMainBtn.textContent = 'رئيسية';
+          setMainBtn.onclick = (e) => {
+            e.stopPropagation();
+            setAsMainImage(imgSrc);
+          };
+          
+          imgContainer.appendChild(img);
+          imgContainer.appendChild(label);
+          imgContainer.appendChild(deleteBtn);
+          imgContainer.appendChild(setMainBtn);
+          gallery.appendChild(imgContainer);
+        });
+      } else {
+        gallery.innerHTML = '<p>لا توجد صور إضافية لهذا المنتج</p>';
+      }
+      
+      document.getElementById('name').value = product.name || '';
+      document.getElementById('price').value = product.price || 0;
+      document.getElementById('discount').value = product.discount || 0;
+      document.getElementById('amount').value = product.amount || 0;
+      document.getElementById('description').value = product.description || '';
+      
+      document.getElementById('high-stock-alert').style.display = 
+        (product.amount || 0) > 4 ? 'block' : 'none';
+
+      const rating = product.average_rating || 0;
+      document.getElementById('rating-stars').innerHTML = renderStars(rating);
+      document.getElementById('rating-count').innerText = 
+        `(${product.ratings ? product.ratings.length : 0} تقييمات)`;
+
+      renderComments(product.ratings || []);
+    }
+
+    function updateSalesData(product, orders) {
+      const salesData = calculateSales(product, orders);
+      const amount = product.amount || 0;
+      const totalItems = salesData + amount;
+      const salesPercentage = totalItems > 0 ? 
+        Math.min(100, (salesData / totalItems) * 100) : 0;
+      
+      document.getElementById('sales-progress').style.width = `${salesPercentage}%`;
+      document.getElementById('sales-progress').innerText = `${Math.round(salesPercentage)}%`;
+      document.getElementById('total-sales').innerText = `إجمالي المبيعات: ${salesData}`;
+    }
+
+    function calculateSales(product, orders) {
+      let totalSales = 0;
+      if (orders && orders.length > 0) {
+        orders.forEach(order => {
+          if (order.items && order.items.length > 0) {
+            order.items.forEach(item => {
+              if (item.id === product.id) {
+                totalSales += item.quantity || 0;
+              }
+            });
+          }
+        });
+      }
+      return totalSales;
+    }
+
+    function renderStars(rating) {
+      const fullStars = Math.floor(rating);
+      const halfStar = rating % 1 >= 0.5 ? 1 : 0;
+      const emptyStars = 5 - fullStars - halfStar;
+      
+      let stars = '';
+      for (let i = 0; i < fullStars; i++) {
+        stars += '<i class="fas fa-star"></i>';
+      }
+      if (halfStar) {
+        stars += '<i class="fas fa-star-half-alt"></i>';
+      }
+      for (let i = 0; i < emptyStars; i++) {
+        stars += '<i class="far fa-star"></i>';
+      }
+      return stars;
+    }
+
+    function renderComments(ratings) {
+      const commentsContainer = document.getElementById('comments-container');
+      commentsContainer.innerHTML = '';
+      
+      if (!ratings || ratings.length === 0) {
+        commentsContainer.innerHTML = '<p>لا توجد تعليقات لهذا المنتج</p>';
+        return;
+      }
+
+      ratings.forEach((rating, index) => {
+        const commentDiv = document.createElement('div');
+        commentDiv.className = 'comment-item';
+        commentDiv.innerHTML = `
+          <div>
+            <strong>${rating.user || 'مستخدم مجهول'}</strong> (${rating.rating}/5)
+            <p>${rating.comment || 'لا يوجد تعليق'}</p>
+          </div>
+          <button class="btn btn-delete-comment btn-sm" onclick="deleteComment(${index})">
+            <i class="fas fa-trash"></i>
+          </button>
+        `;
+        commentsContainer.appendChild(commentDiv);
+      });
+    }
+
+    function deleteComment(index) {
+      if (confirm('هل أنت متأكد من حذف هذا التعليق؟')) {
+        showLoading();
+        const updatedRatings = [...currentProduct.ratings];
+        updatedRatings.splice(index, 1);
+        
+        const updatedAverage = updatedRatings.length > 0 ?
+          updatedRatings.reduce((sum, r) => sum + r.rating, 0) / updatedRatings.length : 0;
+        
+        fetch(`${BASE_URL}/api/products/${productId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ratings: updatedRatings,
+            average_rating: updatedAverage
+          }),
+          credentials: 'include'
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('خطأ في الحذف');
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            currentProduct.ratings = updatedRatings;
+            currentProduct.average_rating = updatedAverage;
+            renderProduct(currentProduct);
+          } else {
+            throw new Error(data.message || 'فشل في الحذف');
+          }
+        })
+        .catch(error => {
+          console.error('خطأ:', error);
+          alert('حدث خطأ أثناء حذف التعليق: ' + error.message);
+        })
+        .finally(() => hideLoading());
+      }
+    }
+
+    function deleteImage(index) {
+      if (confirm('هل أنت متأكد من حذف هذه الصورة؟')) {
+        showLoading();
+        const gallery = document.getElementById('image-gallery');
+        const imgContainer = gallery.children[index];
+        
+        imgContainer.querySelector('img').style.opacity = '0.5';
+        const deletedLabel = document.createElement('p');
+        deletedLabel.textContent = 'تم الحذف';
+        deletedLabel.style.textAlign = 'center';
+        deletedLabel.style.color = '#dc3545';
+        imgContainer.appendChild(deletedLabel);
+
+        imgContainer.querySelector('.delete-image-btn').style.display = 'none';
+        imgContainer.querySelector('.set-main-btn').style.display = 'none';
+
+        hideLoading();
+      }
+    }
+
+    function setAsMainImage(imageUrl) {
+      if (!currentProduct || !currentProduct.images || currentProduct.image === imageUrl) return;
+      
+      showLoading();
+      const updatedImages = currentProduct.images.filter(img => img !== imageUrl);
+      updatedImages.unshift(imageUrl);
+      
+      updateProductImages(imageUrl, updatedImages);
+    }
+
+    function updateProductImages(mainImage, images) {
+      fetch(`${BASE_URL}/api/products/${productId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image: mainImage,
+          images: images
+        }),
+        credentials: 'include'
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.json().then(err => { throw new Error(err.message || 'خطأ في التحديث'); });
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          currentProduct.image = mainImage;
+          currentProduct.images = images;
+          renderProduct(currentProduct);
+          alert('تم تحديث الصور بنجاح!');
+        } else {
+          throw new Error(data.message || 'فشل في التحديث');
+        }
+      })
+      .catch(error => {
+        console.error('خطأ:', error);
+        alert('حدث خطأ أثناء تحديث الصور: ' + error.message);
+      })
+      .finally(() => hideLoading());
+    }
+
+    function saveProduct() {
+      const name = document.getElementById('name').value.trim();
+      const price = parseFloat(document.getElementById('price').value) || 0;
+      const discount = parseInt(document.getElementById('discount').value) || 0;
+      const amount = parseInt(document.getElementById('amount').value) || 0;
+      const description = document.getElementById('description').value.trim();
+
+      if (!name) {
+        alert('يرجى إدخال اسم المنتج');
+        return;
+      }
+      if (price <= 0) {
+        alert('يرجى إدخال سعر صحيح');
+        return;
+      }
+      if (discount < 0 || discount > 100) {
+        alert('نسبة الخصم يجب أن تكون بين 0 و 100');
+        return;
+      }
+      if (amount < 0) {
+        alert('الكمية يجب أن تكون عدد صحيح موجب');
+        return;
+      }
+
+      showLoading();
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('price', price);
+      formData.append('discount', discount);
+      formData.append('amount', amount);
+      formData.append('description', description);
+
+      const mainImageFile = document.getElementById('image-upload').files[0];
+      if (mainImageFile) {
+        formData.append('image', mainImageFile);
+      }
+
+      const additionalImages = document.getElementById('images-upload').files;
+      for (let i = 0; i < additionalImages.length; i++) {
+        formData.append('images', additionalImages[i]);
+      }
+
+      fetch(`${BASE_URL}/api/products/${productId}`, {
+        method: 'PUT',
+        body: formData,
+        credentials: 'include'
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.json().then(err => { throw new Error(err.message || 'خطأ في الحفظ'); });
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          alert('تم حفظ التغييرات بنجاح!');
+          document.getElementById('image-upload').value = '';
+          document.getElementById('images-upload').value = '';
+          document.getElementById('main-image-preview-container').innerHTML = '';
+          document.getElementById('additional-images-preview-container').innerHTML = '';
+          fetchProduct();
+        } else {
+          alert(data.message || 'فشل في الحفظ');
+        }
+      })
+      .catch(error => {
+        console.error('خطأ:', error);
+        alert('حدث خطأ أثناء حفظ التغييرات: ' + error.message);
+      })
+      .finally(() => hideLoading());
+    }
+
+    document.getElementById('image-upload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const previewContainer = document.getElementById('main-image-preview-container');
+          previewContainer.innerHTML = `
+            <img src="${event.target.result}" alt="صورة المنتج" class="product-img" style="width: 100px; height: 100px;">
+            <p style="text-align: center;">صورة المنتج رئيسية</p>
+          `;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.getElementById('images-upload').addEventListener('change', function(e) {
+      const files = e.target.files;
+      const previewContainer = document.getElementById('additional-images-preview-container');
+      previewContainer.innerHTML = '';
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const imgContainer = document.createElement('div');
+          imgContainer.style.display = 'inline-block';
+          imgContainer.style.margin = '5px';
+          imgContainer.innerHTML = `
+            <img src="${event.target.result}" alt="صورة إضافية" class="product-img" style="width: 100px; height: 100px;">
+            <p style="text-align: center;">إضافية</p>
+          `;
+          previewContainer.appendChild(imgContainer);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function logout() {
+      if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+        showLoading();
+        fetch(`${BASE_URL}/api/logout`, { 
+          method: 'POST',
+          credentials: 'include'
+        })
+        .then(() => {
+          window.location.href = '/login.html';
+        })
+        .catch(error => {
+          console.error('خطأ:', error);
+          alert('حدث خطأ أثناء تسجيل الخروج');
+        })
+        .finally(() => hideLoading());
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+    });
+  </script>
+</body>
+</html>

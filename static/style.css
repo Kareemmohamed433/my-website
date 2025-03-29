@@ -1,6 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap");
-
-/* إعادة تعيين القيم الافتراضية */
+إعادة تعيين القيم الافتراضية
 * {
   margin: 0;
   padding: 0;
@@ -9,25 +7,19 @@
 
 /* الأنماط العامة */
 body {
-  font-family: "Poppins", sans-serif;
-  background-color: #fafafa; /* لون خلفية فاتح */
-  color: #333; /* لون النص لزيادة التباين */
+  color: #efe8e8;
+  background-color: #000; /* خلفية سوداء للصفحة بأكملها */
 }
 
 /* قسم البطل (Hero Section) */
 #hero-section {
-  background-image: url("{{ url_for('static', filename='img/back.jpg') }}");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  min-height: 70vh; /* تغطية 70% من الشاشة */
+  min-height: 70vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
   padding: 50px 20px;
-  background: none;
   border-radius: 10px;
   margin-top: 30px;
   position: relative;
@@ -37,9 +29,8 @@ body {
 /* قسم العلامات التجارية (Brand Section) */
 #brand {
   text-align: center;
-  margin-top: 200px; /* زيادة المسافة للأسفل */
+  margin-top: 300px;
   padding: 20px;
-  background: none;
   border-radius: 10px;
   position: relative;
   z-index: 1;
@@ -53,7 +44,6 @@ body {
   text-align: center;
   margin-top: 50px;
   padding: 30px;
-  background: rgba(255, 255, 255, 0.8);
   border-radius: 10px;
 }
 
@@ -62,7 +52,6 @@ body {
 }
 
 #new button {
-  background: #fb774b;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -70,10 +59,6 @@ body {
   border-radius: 5px;
   cursor: pointer;
   transition: 0.3s;
-}
-
-#new button:hover {
-  background: #e05a34;
 }
 
 /* أنماط العناوين */
@@ -116,7 +101,6 @@ h6 {
 hr {
   width: 30px;
   height: 2px;
-  background-color: #fb774b;
   border: none;
 }
 
@@ -151,23 +135,17 @@ hr {
 
 /* أنماط الشريط العلوي (Navbar) */
 .navbar {
-  background-color: #f8f9fa;
   padding: 10px;
 }
 
 .navbar-nav .nav-item .nav-link {
   font-weight: 500;
-  color: #333;
+  color: #f1eaea;
   transition: color 0.3s ease;
-}
-
-.navbar-nav .nav-item .nav-link:hover {
-  color: #fb774b;
 }
 
 /* زر رئيسي */
 .button-primary {
-  background-color: #fb774b;
   color: white;
   padding: 10px 20px;
   border-radius: 5px;
@@ -176,31 +154,9 @@ hr {
   transition: background-color 0.3s ease;
 }
 
-.button-primary:hover {
-  background-color: #e05a34;
-}
-
-/* زر "تسوق الآن" */
-.shop-now-btn {
-  background-color: #fb774b;
-  color: white;
-  padding: 15px 30px;
-  border-radius: 25px;
-  font-size: 18px;
-  border: none;
-  cursor: pointer;
-  transition: 0.3s;
-  margin-top: 20px;
-}
-
-.shop-now-btn:hover {
-  background-color: #e05a34;
-}
-
 /* قسم العلامات التجارية */
 #brand {
   padding: 50px 0;
-  background-color: #fff;
   text-align: center;
 }
 
@@ -220,27 +176,10 @@ hr {
   gap: 15px;
 }
 
-/* تصميم البادج (عرض خاص) */
-.offer-badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: red;
-  color: white;
-  padding: 5px 10px;
-  font-size: 14px;
-  font-weight: bold;
-  border-radius: 5px;
-}
-
 /* تأثير تمرير الماوس على المنتج */
 .one {
   position: relative;
   transition: 0.3s;
-}
-
-.one:hover .product-img {
-  filter: brightness(0.5) sepia(1) hue-rotate(-50deg) saturate(3);
 }
 
 /* ضبط أبعاد الصور */
@@ -271,14 +210,6 @@ hr {
   .product-img {
     height: 250px;
   }
-  .offer-badge {
-    font-size: 12px;
-    padding: 3px 8px;
-  }
-  .shop-now-btn {
-    font-size: 16px;
-    padding: 10px 20px;
-  }
   .navbar {
     padding: 5px;
   }
@@ -292,7 +223,7 @@ hr {
 
 /* أنماط التذييل (Footer) */
 .footer {
-  background-color: #333;
+  background-color: #000;
   color: white;
   text-align: center;
   padding: 20px;
@@ -300,13 +231,8 @@ hr {
 }
 
 .footer a {
-  color: #fb774b;
   text-decoration: none;
   font-weight: bold;
-}
-
-.footer a:hover {
-  color: #e05a34;
 }
 
 @media (max-width: 768px) {
@@ -352,7 +278,6 @@ hr {
       width: 100%;
       top: 100%;
       left: 0;
-      background: white;
       z-index: 1000;
       box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
       border-radius: 5px;
@@ -399,11 +324,11 @@ hr {
     margin: 0 auto;
   }
   .carousel-item {
-    padding: 0 10px; /* إضافة مسافة جانبية */
+    padding: 0 10px;
   }
   .carousel-control-prev,
   .carousel-control-next {
-    width: 30px; /* تصغير حجم أزرار التحكم */
+    width: 30px;
     height: 30px;
     top: 50%;
     transform: translateY(-50%);
@@ -414,13 +339,56 @@ hr {
     height: 20px;
   }
 }
-#bg-video {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* يضمن تغطية الشاشة كاملة مع الحفاظ على نسبة العرض للارتفاع */
-  z-index: -1;      /* يضع الفيديو خلف المحتوى */
+.custom-card {
+  --background: linear-gradient(to left, #f7ba2b 0%, #ea5358 100%);
+  width: 190px;
+  height: 254px;
+  padding: 5px;
+  border-radius: 1rem;
+  overflow: visible;
+  background: var(--background);
+  position: relative;
+  z-index: 1;
 }
 
+.custom-card::after {
+  position: absolute;
+  content: "";
+  top: 30px;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  height: 100%;
+  width: 100%;
+  transform: scale(0.8);
+  filter: blur(25px);
+  background: var(--background);
+  transition: opacity .5s;
+}
+
+.custom-card-info {
+  --color: #181818;
+  background: var(--color);
+  color: var(--color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: .7rem;
+}
+
+.custom-card .title {
+  font-weight: bold;
+  letter-spacing: .1em;
+}
+
+/* تأثير التحويم */
+.custom-card:hover::after {
+  opacity: 0;
+}
+
+.custom-card:hover .custom-card-info {
+  color: #f7ba2b;
+  transition: color 1s;
+}
