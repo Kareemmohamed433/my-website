@@ -23,7 +23,12 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install --no-cache-dir --prefer-binary -r requirements.txt
 
-      - name: Build and Deploy
+      - name: Build static files
         run: |
-          python manage.py collectstatic --noinput
-          python manage.py migrate
+          python app.py  # هذا الأمر يفترض أن app.py يولد الملفات الثابتة
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build  # المجلد الذي يحتوي على الملفات الثابتة
