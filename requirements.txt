@@ -1,13 +1,12 @@
-Flask==2.2.2
-gunicorn==20.1.0
-pymongo==4.2.0
-certifi==2022.12.7
-python-dotenv==1.0.0
-PyJWT==2.6.0
-firebase-admin==6.0.1
-bcrypt==4.0.1
-stripe==2.68.0
-twilio==7.14.0
-pandas==1.5.3
-Flask-Cors==3.0.10
-Frozen-Flask==1.0.2
+Flask==3.0.3          # أحدث إصدار مستقر
+gunicorn==23.0.0      # أحدث إصدار لتشغيل التطبيق على Railway
+pymongo==4.6.3        # لدعم MongoDB
+certifi==2024.2.2     # للتحقق من الشهادات
+python-dotenv==1.0.1  # لتحميل المتغيرات البيئية
+PyJWT==2.8.0         # للتوثيق باستخدام JWT
+firebase-admin==6.5.0 # للتكامل مع Firebase
+bcrypt==4.1.2        # لتشفير كلمات المرور
+stripe==8.9.0        # لمعالجة المدفوعات
+twilio==9.0.5        # لخدمات الرسائل/المكالمات
+pandas==2.2.2        # لتحليل البيانات
+Flask-Cors==4.0.0    # لدعم CORS في API
