@@ -32,7 +32,7 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 # Update CORS settings
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:5001", "http://127.0.0.1:5001"],
+        "origins": ["http://localhost:5001", "http://127.0.0.1:5001", "https://*.up.railway.app"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Accept"],
         "expose_headers": ["Set-Cookie"],
@@ -45,26 +45,35 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Connect to MongoDB using environment variable
-MONGO_CONNECTION_STRING = os.getenv('mydatabase', '').strip()
+MONGO_CONNECTION_STRING = os.getenv('MONGOURL', '').strip()
 if not MONGO_CONNECTION_STRING:
     logger.error("MongoDB connection string not found in environment variables!")
-    # يمكنك إيقاف التشغيل أو اتخاذ إجراء بديل هنا، مثل:
     import sys
     sys.exit(1)
 
-client = MongoClient(MONGO_CONNECTION_STRING, tlsCAFile=certifi.where())
-db = client["mydatabase"]
-products_collection = db["products"]
-orders_collection = db["orders"]
-users_collection = db["users"]
-cart_collection = db["carts"]
-complaints_collection = db["complaints"]
+try:
+    client = MongoClient(MONGO_CONNECTION_STRING, tlsCAFile=certifi.where())
+    db = client["mydatabase"]
+    products_collection = db["products"]
+    orders_collection = db["orders"]
+    users_collection = db["users"]
+    cart_collection = db["carts"]
+    complaints_collection = db["complaints"]
+    logger.info("✅ Successfully connected to MongoDB!")
+except Exception as e:
+    logger.error(f"Failed to connect to MongoDB: {e}")
+    import sys
+    sys.exit(1)
 
-logger.info("✅ Successfully connected to MongoDB!")
+# Update 'kareem' to admin role (run once with error handling)
+def ensure_admin_user():
+    try:
+        users_collection.update_one({"username": "kareem"}, {"$set": {"role": "admin"}}, upsert=True)
+        logger.info("✅ Updated user 'kareem' to have role 'admin' in the database")
+    except Exception as e:
+        logger.error(f"Failed to update admin user: {e}")
 
-# Update 'kareem' to admin role (run once)
-users_collection.update_one({"username": "kareem"}, {"$set": {"role": "admin"}}, upsert=True)
-logger.info("✅ Updated user 'kareem' to have role 'admin' in the database")
+ensure_admin_user()
 
 # Define constants
 SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
@@ -94,9 +103,17 @@ def send_whatsapp_message(to_number, message):
         logger.error(f"❌ Failed to send WhatsApp message: {e}")
         return False
 
-# Initialize Firebase
-# cred = credentials.Certificate("C:/Users/HP/Desktop/Build-Ecommerce-Website-With-HTML-CSS-JavaScript-main/web-site-of-market-firebase-adminsdk-fbsvc-7197b01469.json")
-# firebase_admin.initialize_app(cred)
+# Initialize Firebase (optional)
+firebase_cred_path = os.getenv('FIREBASE_CREDENTIALS_PATH')
+if firebase_cred_path and os.path.exists(firebase_cred_path):
+    try:
+        cred = credentials.Certificate(firebase_cred_path)
+        firebase_admin.initialize_app(cred)
+        logger.info("✅ Firebase Admin SDK initialized")
+    except Exception as e:
+        logger.warning(f"Failed to initialize Firebase: {e}")
+else:
+    logger.warning("Firebase credentials not found, proceeding without Firebase authentication")
 
 # Token required decorator
 def token_required(f):
@@ -617,6 +634,7 @@ def delete_all_products():
     except Exception as e:
         logger.error(f"❌ فشل في حذف جميع المنتجات: {e}")
         return jsonify({"error": "❌ فشل في حذف جميع المنتجات"}), 500
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}  # أضف الامتدادات المسموحة
 
 def allowed_file(filename):
