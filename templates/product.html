@@ -80,8 +80,8 @@
       margin-top: 20px;
     }
     #ratings-content, #description-content {
-      display: none; /* مخفي في البداية */
-      animation: slideIn 0.5s ease-in-out; /* حركة الانزلاق عند الظهور */
+      display: none;
+      animation: slideIn 0.5s ease-in-out;
     }
     .rating-item {
       border-bottom: 1px solid #eee;
@@ -138,6 +138,60 @@
       background-color: #0056b3;
       box-shadow: 0 6px 15px rgba(0, 123, 255, 0.5);
     }
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 10px 0;
+    }
+    .quantity-controls .btn {
+      padding: 5px 10px;
+      font-size: 14px;
+    }
+    .quantity {
+      font-weight: bold;
+      min-width: 30px;
+      text-align: center;
+    }
+    /* نمط الـ Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      max-width: 400px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      animation: slideIn 0.3s ease-in-out;
+    }
+    .modal-content img {
+      max-width: 100px;
+      margin-bottom: 15px;
+    }
+    .modal-content button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .modal-content button:hover {
+      background: #0056b3;
+    }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -161,6 +215,11 @@
     </div>
     <div id="price-info"></div>
     <p id="amount"></p>
+    <div class="quantity-controls">
+      <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(-1)">-</button>
+      <span class="quantity mx-2" id="order-quantity">1</span>
+      <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(1)">+</button>
+    </div>
     <button class="btn btn-primary" onclick="addToCart()">🛒 أضف إلى السلة</button>
     <div class="ratings-section">
       <div id="ratings-content">
@@ -191,11 +250,31 @@
     </div>
   </div>
 
+  <!-- Modal للكمية المحدودة -->
+  <div class="modal" id="quantityModal">
+    <div class="modal-content">
+      <img src="https://via.placeholder.com/100" alt="تحذير">
+      <p id="modalMessage"></p>
+      <button onclick="closeModal()">حسنًا</button>
+    </div>
+  </div>
+
+  <!-- Modal لتأكيد الإضافة إلى السلة -->
+  <div class="modal" id="cartModal">
+    <div class="modal-content">
+      <img src="https://via.placeholder.com/100?text=✓" alt="نجاح">
+      <p id="cartMessage"></p>
+      <button onclick="closeCartModalAndRedirect()">الذهاب إلى السلة</button>
+    </div>
+  </div>
+
   <script>
     const productId = window.location.pathname.split('/').pop();
     let currentImageIndex = 0;
     let images = [];
     let selectedRating = 0;
+    let orderQuantity = 1;
+    let productData = null; // لتخزين بيانات المنتج
 
     // جلب بيانات المنتج من API
     fetch(`/api/products?id=${productId}`)
@@ -207,6 +286,7 @@
         const product = Array.isArray(data) ? data[0] : data;
         if (!product) throw new Error("المنتج غير موجود");
 
+        productData = product; // تخزين بيانات المنتج لاستخدامها لاحقًا
         document.getElementById('product-name').textContent = product.name || 'اسم غير متوفر';
         images = (product.images && product.images.length > 0) ? product.images : (product.image ? [product.image] : ['/static/images/default.jpg']);
         document.getElementById('main-image').src = images[0];
@@ -221,7 +301,8 @@
            <p>السعر بعد الخصم: <strong style="color:green;">$${finalPrice.toFixed(2)}</strong> (خصم ${discount}%)</p>` :
           `<p>السعر: <strong>$${price.toFixed(2)}</strong></p>`;
 
-        document.getElementById('amount').textContent = `الكمية المتوفرة: ${product.amount || 'غير محدد'}`;
+        const availableAmount = parseInt(product.amount) || Infinity;
+        document.getElementById('amount').textContent = `الكمية المتوفرة: ${availableAmount === Infinity ? 'غير محدد' : availableAmount}`;
 
         const thumbnails = document.getElementById('thumbnails');
         thumbnails.innerHTML = "";
@@ -287,17 +368,54 @@
       });
     }
 
-    // دالة إضافة المنتج إلى السلة
+    // دالة تحديث الكمية
+    function updateQuantity(change) {
+      const quantityElement = document.getElementById('order-quantity');
+      let currentQuantity = parseInt(quantityElement.textContent) || 1;
+      currentQuantity += change;
+
+      const availableAmountText = document.getElementById('amount').textContent.split(': ')[1];
+      const availableAmount = parseInt(availableAmountText) || Infinity;
+
+      if (currentQuantity < 1) currentQuantity = 1;
+      if (currentQuantity > availableAmount && availableAmount !== Infinity) {
+        currentQuantity = availableAmount;
+        showModal(`الكمية المتوفرة محدودة: ${availableAmount}`);
+      }
+
+      orderQuantity = currentQuantity;
+      quantityElement.textContent = currentQuantity;
+    }
+
+    // دالة إضافة المنتج إلى السلة مع عرض رسالة والتوجيه
     function addToCart() {
       let cart = JSON.parse(localStorage.getItem("cart")) || [];
       let existing = cart.find(item => item.id === productId);
       if (existing) {
-        existing.quantity++;
+        existing.quantity += orderQuantity;
       } else {
-        cart.push({ id: productId, quantity: 1 });
+        cart.push({ id: productId, quantity: orderQuantity });
       }
       localStorage.setItem("cart", JSON.stringify(cart));
-      alert('✅ تمت الإضافة إلى السلة!');
+
+      // حساب السعر الإجمالي بناءً على الكمية
+      const price = parseFloat(productData.price) || 0;
+      const discount = parseFloat(productData.discount) || 0;
+      const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
+      const totalPrice = finalPrice * orderQuantity;
+
+      // عرض رسالة ديناميكية في الـ Modal
+      const message = `
+        تمت إضافة المنتج إلى السلة بنجاح!<br>
+        <strong>المنتج:</strong> ${productData.name || 'غير معروف'}<br>
+        <strong>الكمية:</strong> ${orderQuantity}<br>
+        <strong>السعر الإجمالي:</strong> $${totalPrice.toFixed(2)}
+      `;
+      showCartModal(message);
+
+      // إعادة تعيين الكمية بعد الإضافة
+      orderQuantity = 1;
+      document.getElementById('order-quantity').textContent = 1;
     }
 
     // دالة إرسال التقييم
@@ -344,7 +462,7 @@
         ratingsContent.style.display = 'none';
       } else {
         ratingsContent.style.display = 'block';
-        descriptionContent.style.display = 'none'; // إخفاء الوصف إذا كان مفتوحًا
+        descriptionContent.style.display = 'none';
       }
     }
 
@@ -356,8 +474,37 @@
         descriptionContent.style.display = 'none';
       } else {
         descriptionContent.style.display = 'block';
-        ratingsContent.style.display = 'none'; // إخفاء التقييمات إذا كانت مفتوحة
+        ratingsContent.style.display = 'none';
       }
+    }
+
+    // دالة لإظهار Modal الكمية المحدودة
+    function showModal(message) {
+      const modal = document.getElementById('quantityModal');
+      const modalMessage = document.getElementById('modalMessage');
+      modalMessage.textContent = message;
+      modal.style.display = 'flex';
+    }
+
+    // دالة لإغلاق Modal الكمية المحدودة
+    function closeModal() {
+      const modal = document.getElementById('quantityModal');
+      modal.style.display = 'none';
+    }
+
+    // دالة لإظهار Modal تأكيد الإضافة إلى السلة
+    function showCartModal(message) {
+      const modal = document.getElementById('cartModal');
+      const cartMessage = document.getElementById('cartMessage');
+      cartMessage.innerHTML = message; // استخدام innerHTML لدعم التنسيق
+      modal.style.display = 'flex';
+    }
+
+    // دالة لإغلاق Modal السلة والتوجيه إلى صفحة السلة
+    function closeCartModalAndRedirect() {
+      const modal = document.getElementById('cartModal');
+      modal.style.display = 'none';
+      window.location.href = '/cart'; // التوجيه إلى صفحة السلة
     }
 
     // دعم اللمس للتبديل بين الصور على الموبايل

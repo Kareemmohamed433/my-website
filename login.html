@@ -176,10 +176,11 @@
   <script>
     const messageEl = document.getElementById('message');
     const logoutBtn = document.getElementById('logout-btn');
-    const BASE_URL = window.location.origin; // استخدام الأصل الحالي لتجنب مشاكل CORS
+    const BASE_URL = window.location.origin;
 
     // التحقق من حالة المصادقة عند تحميل الصفحة
     function checkAuth() {
+      console.log('Checking authentication status...');
       fetch(`${BASE_URL}/api/check_auth`, { 
         method: 'GET',
         credentials: 'include',
@@ -194,38 +195,21 @@
         return response.json();
       })
       .then(data => {
+        console.log('Check auth response data:', data);
         if (data && data.authenticated) {
           const authState = {
             authenticated: true,
-            role: data.role,
+            role: data.role || 'user',
             username: data.username || 'مستخدم'
           };
           localStorage.setItem('authState', JSON.stringify(authState));
-          messageEl.textContent = `✅ مرحبًا! أنت مسجل الدخول كـ ${data.role} (${data.username})`;
+          messageEl.textContent = `✅ مرحبًا! أنت مسجل الدخول كـ ${authState.role} (${authState.username})`;
           messageEl.classList.add('visible', 'success');
           logoutBtn.classList.add('visible');
           
-          if (data.role === 'admin') {
-            console.log('Checking admin access');
-            fetch(`${BASE_URL}/analysis.html`, { 
-              credentials: 'include' 
-            })
-            .then(res => {
-              console.log('Analysis page response status:', res.status);
-              if (res.ok) {
-                console.log('Redirecting to analysis.html');
-                window.location.href = `${BASE_URL}/analysis.html`;
-              } else {
-                throw new Error('Access denied to analysis page');
-              }
-            })
-            .catch(err => {
-              console.error('Failed to access analysis.html:', err);
-              messageEl.textContent = '❌ فشل الوصول إلى صفحة الإدارة';
-              messageEl.classList.add('visible');
-              messageEl.classList.remove('success');
-            });
-          }
+          const redirectUrl = authState.role === 'admin' ? `${BASE_URL}/analysis.html` : `${BASE_URL}/index.html`;
+          console.log('Redirecting to:', redirectUrl);
+          window.location.href = redirectUrl;
         } else {
           localStorage.removeItem('authState');
           logoutBtn.classList.remove('visible');
@@ -233,7 +217,9 @@
         }
       })
       .catch(error => {
-        console.error('خطأ في التحقق من المصادقة:', error);
+        console.error('Error checking authentication:', error);
+        messageEl.textContent = '❌ خطأ في التحقق من حالة تسجيل الدخول';
+        messageEl.classList.add('visible');
       });
     }
 
@@ -261,6 +247,7 @@
       }
 
       try {
+        console.log('Attempting login with:', { username });
         const response = await fetch(`${BASE_URL}/api/login`, {
           method: 'POST',
           headers: { 
@@ -281,36 +268,24 @@
         if (data.success) {
           const authState = {
             authenticated: true,
-            role: data.role,
-            username: data.username
+            role: data.role || 'user',
+            username: data.username || username
           };
           localStorage.setItem('authState', JSON.stringify(authState));
-          messageEl.textContent = `✅ تم تسجيل الدخول بنجاح كـ ${data.role} (${data.username})`;
+          messageEl.textContent = `✅ تم تسجيل الدخول بنجاح كـ ${authState.role} (${authState.username})`;
           messageEl.classList.add('visible', 'success');
           logoutBtn.classList.add('visible');
-          
-          if (data.role === 'admin') {
-            console.log('Checking admin access before redirect');
-            const verifyResponse = await fetch(`${BASE_URL}/api/check_auth`, { 
-              method: 'GET',
-              credentials: 'include' 
-            });
-            const verifyData = await verifyResponse.json();
-            console.log('Check auth verification response:', verifyData);
-            if (verifyResponse.ok && verifyData.authenticated) {
-              console.log('Token verified, redirecting to analysis.html');
-              window.location.href = `${BASE_URL}/analysis.html`;
-            } else {
-              throw new Error('Token not set or invalid');
-            }
-          }
+
+          const redirectUrl = authState.role === 'admin' ? `${BASE_URL}/analysis.html` : `${BASE_URL}/index.html`;
+          console.log('Redirecting to:', redirectUrl);
+          window.location.href = redirectUrl; // التوجيه الفوري
         } else {
           messageEl.textContent = data.message || '❌ بيانات الدخول غير صحيحة';
           messageEl.classList.add('visible');
           messageEl.classList.remove('success');
         }
       } catch (error) {
-        console.error('خطأ في تسجيل الدخول:', error);
+        console.error('Login error:', error);
         messageEl.textContent = `❌ ${error.message}`;
         messageEl.classList.add('visible');
         messageEl.classList.remove('success');
@@ -330,7 +305,7 @@
         if (!response.ok) throw new Error(data.message || 'فشل تسجيل الخروج');
 
         if (data.success) {
-          localStorage.clear(); // مسح كامل localStorage عند تسجيل الخروج
+          localStorage.clear();
           messageEl.textContent = '✅ تم تسجيل الخروج بنجاح';
           messageEl.classList.add('visible', 'success');
           logoutBtn.classList.remove('visible');
@@ -341,7 +316,7 @@
           messageEl.classList.remove('success');
         }
       } catch (error) {
-        console.error('خطأ في تسجيل الخروج:', error);
+        console.error('Logout error:', error);
         messageEl.textContent = `❌ ${error.message}`;
         messageEl.classList.add('visible');
         messageEl.classList.remove('success');

@@ -697,7 +697,11 @@ def update_product(product_id):
     except Exception as e:
         return jsonify({"success": False, "message": f"❌ Server error: {str(e)}"}), 500
 
-# Place order API
+# دالة لإرسال رسالة WhatsApp (افتراضية)
+def send_whatsapp_message(phone_number, message):
+    logger.info(f"Sending WhatsApp message to {phone_number}: {message}")
+    # أضف هنا الكود الفعلي لإرسال الرسالة عبر API WhatsApp
+
 @app.route('/api/place_order', methods=['POST'])
 def place_order():
     try:
@@ -706,12 +710,20 @@ def place_order():
         if not order_data:
             return jsonify({"error": "❌ Invalid order data"}), 400
 
+        # التحقق من البيانات الإلزامية للدفع عند الاستلام
+        if order_data.get("paymentMethod") == "delivery":
+            if not all(key in order_data for key in ["name", "phone", "altPhone", "address"]):
+                return jsonify({"error": "❌ Missing required fields (name, phone, altPhone, address)"}), 400
+
+        # تفاصيل العميل مع جعل altPhone إلزاميًا وemail اختياريًا
         customer_details = {
             "name": order_data.get("name", "Not specified"),
-            "email": order_data.get("email", "Not specified"),
-            "address": order_data.get("address", "Not specified"),
-            "phone": order_data.get("phone", "")
+            "phone": order_data.get("phone", ""),
+            "altPhone": order_data.get("altPhone", ""),  # إلزامي للدفع عند الاستلام
+            "email": order_data.get("email", "Not specified"),  # اختياري
+            "address": order_data.get("address", "Not specified")
         }
+
         items = order_data.get("items", [])
         if not items:
             return jsonify({"error": "❌ Cart is empty"}), 400
@@ -719,6 +731,7 @@ def place_order():
         total = 0
         validated_items = []
 
+        # التحقق من المنتجات وحساب الإجمالي
         for item in items:
             product = products_collection.find_one({"id": item.get("id")})
             if product:
@@ -740,6 +753,7 @@ def place_order():
         if not validated_items:
             return jsonify({"error": "❌ No valid products in order"}), 400
 
+        # التحقق من الكمية وتحديث المخزون
         for item in validated_items:
             product = products_collection.find_one({"id": item["id"]})
             if product:
@@ -752,6 +766,7 @@ def place_order():
                     {"$set": {"amount": new_amount}}
                 )
 
+        # تنسيق الطلب
         normalized_order = {
             "customerDetails": customer_details,
             "items": validated_items,
@@ -761,19 +776,21 @@ def place_order():
             "created_at": datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
         }
 
+        # إضافة الطلب إلى قاعدة البيانات
         result = orders_collection.insert_one(normalized_order)
         order_id = str(result.inserted_id)
         cart_collection.delete_one({"user": customer_details["email"]})
         logger.info(f"✅ New order placed: {order_id}")
 
-        # Prepare WhatsApp message with customer details only
+        # إعداد رسالة WhatsApp المحدثة
         whatsapp_message = ""
         if order_data.get("paymentMethod") == "delivery":
             whatsapp_message = (
                 f"طلب جديد (الدفع عند الاستلام):\n"
                 f"الاسم: {customer_details['name']}\n"
-                f"رقم الهاتف: {customer_details['phone']}\n"
-                f"البريد الإلكتروني: {customer_details['email']}\n"
+                f"رقم الهاتف الأساسي: {customer_details['phone']}\n"
+                f"رقم الهاتف الثاني: {customer_details['altPhone']}\n"  # إضافة الهاتف الثاني
+                f"البريد الإلكتروني: {customer_details['email'] if customer_details['email'] != 'Not specified' else 'غير محدد'}\n"  # اختياري
                 f"العنوان: {customer_details['address']}\n"
                 f"الإجمالي: {round(total, 2)}"
             )
@@ -785,7 +802,7 @@ def place_order():
                 f"الإجمالي: {round(total, 2)}"
             )
 
-        # Send WhatsApp message directly
+        # إرسال رسالة WhatsApp
         send_whatsapp_message("+201022957599", whatsapp_message)
 
         return jsonify({
@@ -796,7 +813,6 @@ def place_order():
     except Exception as e:
         logger.error(f"❌ Failed to place order: {e}")
         return jsonify({"error": f"❌ Failed to place order: {str(e)}"}), 500
-
 # Order confirmation
 @app.route('/order_confirmation/<order_id>')
 def order_confirmation(order_id):

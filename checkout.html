@@ -92,6 +92,17 @@
     .payment-form button:hover {
       background: #c82333;
     }
+    .optional-field {
+      position: relative;
+    }
+    .optional-field::after {
+      content: "(اختياري)";
+      position: absolute;
+      left: 10px;
+      top: 12px;
+      color: #6c757d;
+      font-size: 12px;
+    }
     .loading {
       display: none;
       text-align: center;
@@ -138,6 +149,10 @@
       .payment-form button {
         font-size: 16px;
       }
+      .optional-field::after {
+        font-size: 10px;
+        top: 10px;
+      }
     }
   </style>
 </head>
@@ -152,8 +167,11 @@
     <div id="delivery-form" class="payment-form">
       <h3>الدفع عند الاستلام</h3>
       <input type="text" id="name" placeholder="الاسم الكامل" required>
-      <input type="tel" id="phone" placeholder="رقم الهاتف" required>
-      <input type="email" id="email" placeholder="البريد الإلكتروني" required>
+      <input type="tel" id="phone" placeholder="رقم الهاتف الأساسي" required>
+      <input type="tel" id="alt-phone" placeholder="رقم الهاتف الثاني" required>
+      <div class="optional-field">
+        <input type="email" id="email" placeholder="البريد الإلكتروني">
+      </div>
       <input type="text" id="address" placeholder="العنوان" required>
       <button onclick="showConfirmation('delivery')">تأكيد الطلب</button>
     </div>
@@ -218,37 +236,46 @@
 
       let details = "";
       if (paymentMethod === "delivery") {
-        const name = document.getElementById("name").value;
-        const phone = document.getElementById("phone").value;
-        const email = document.getElementById("email").value;
-        const address = document.getElementById("address").value;
+        const name = document.getElementById("name").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const altPhone = document.getElementById("alt-phone").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const address = document.getElementById("address").value.trim();
 
-        if (!name || !phone || !email || !address) {
-          alert("❌ الرجاء ملء جميع الحقول المطلوبة.");
+        // التحقق من الحقول الإلزامية
+        if (!name || !phone || !altPhone || !address) {
+          alert("❌ الرجاء ملء الحقول المطلوبة (الاسم، الهاتف الأساسي، الهاتف الثاني، العنوان).");
           return;
         }
+
+        // تعبئة بيانات الطلب
         orderData.name = name;
         orderData.phone = phone;
-        orderData.email = email;
+        orderData.altPhone = altPhone;
+        if (email) orderData.email = email; // البريد الإلكتروني اختياري
         orderData.address = address;
 
+        // عرض التفاصيل في نافذة التأكيد
         details = `
           <p><strong>الاسم:</strong> ${name}</p>
-          <p><strong>رقم الهاتف:</strong> ${phone}</p>
-          <p><strong>البريد الإلكتروني:</strong> ${email}</p>
+          <p><strong>رقم الهاتف الأساسي:</strong> ${phone}</p>
+          <p><strong>رقم الهاتف الثاني:</strong> ${altPhone}</p>
+          ${email ? `<p><strong>البريد الإلكتروني:</strong> ${email}</p>` : ''}
           <p><strong>العنوان:</strong> ${address}</p>
           <p><strong>طريقة الدفع:</strong> الدفع عند الاستلام</p>
+          <p><strong>عدد المنتجات:</strong> ${orderData.items.length}</p>
         `;
       } else if (paymentMethod === "visa") {
-        const cardName = document.getElementById("card-name").value;
-        const cardNumber = document.getElementById("card-number").value;
-        const cardExpiry = document.getElementById("card-expiry").value;
-        const cardCVV = document.getElementById("card-cvv").value;
+        const cardName = document.getElementById("card-name").value.trim();
+        const cardNumber = document.getElementById("card-number").value.trim();
+        const cardExpiry = document.getElementById("card-expiry").value.trim();
+        const cardCVV = document.getElementById("card-cvv").value.trim();
 
         if (!cardName || !cardNumber || !cardExpiry || !cardCVV) {
           alert("❌ الرجاء ملء جميع بيانات البطاقة.");
           return;
         }
+
         orderData.cardDetails = { cardName, cardNumber, cardExpiry, cardCVV };
 
         details = `
@@ -257,6 +284,7 @@
           <p><strong>تاريخ الانتهاء:</strong> ${cardExpiry}</p>
           <p><strong>CVV:</strong> ***</p>
           <p><strong>طريقة الدفع:</strong> فيزا</p>
+          <p><strong>عدد المنتجات:</strong> ${orderData.items.length}</p>
         `;
       }
 
@@ -275,12 +303,17 @@
       loading.style.display = "block";
 
       try {
+        console.log("Sending order data:", orderData); // للتحقق من البيانات المرسلة
         const response = await fetch("/api/place_order", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include", // لدعم الجلسات إذا لزم الأمر
           body: JSON.stringify(orderData),
         });
+
         const data = await response.json();
+        console.log("Response from server:", data); // للتحقق من الاستجابة
+
         if (!response.ok) {
           if (data.error && data.error.includes("Insufficient quantity")) {
             const productId = data.error.match(/product (\w+)/)?.[1] || "غير معروف";
@@ -289,11 +322,12 @@
           throw new Error(data.error || "فشل في تقديم الطلب.");
         }
 
-        // لا حاجة لفتح واتساب هنا، الـ Backend سيتولى إرسال الرسالة مباشرة
         localStorage.removeItem("cart");
         if (data.redirect_url) {
+          console.log("Redirecting to:", data.redirect_url);
           window.location.href = data.redirect_url;
         } else {
+          console.log("Redirecting to default: /order_confirmation");
           window.location.href = "/order_confirmation";
         }
       } catch (error) {
