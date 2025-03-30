@@ -10,3 +10,4 @@ stripe==2.68.0
 twilio==7.14.0
 pandas==1.5.3
 Flask-Cors==3.0.10
+Frozen-Flask==1.0.2
