@@ -64,6 +64,8 @@
       height: auto;
       margin-left: 10px;
       animation: bounceIn 1s ease-out;
+      position: relative;
+      z-index: 1200;
     }
     .translate-btn {
       background: #fff;
@@ -73,6 +75,7 @@
       border-radius: 5px;
       cursor: pointer;
       font-family: 'Lato', sans-serif;
+      margin-left: 10px;
     }
     @media (max-width: 991px) {
       .navbar-collapse {
@@ -108,6 +111,14 @@
       .navbar-nav .nav-item:nth-child(6) { transition-delay: 0.6s; }
       .navbar-nav .nav-item:nth-child(7) { transition-delay: 0.7s; }
       .navbar-nav .nav-item:nth-child(8) { transition-delay: 0.8s; }
+      .translate-btn {
+        position: absolute;
+        top: 15px;
+        left: 20px;
+        z-index: 1150;
+        margin: 0;
+        opacity: 1;
+      }
     }
     .page-container {
       margin-top: 80px;
@@ -451,7 +462,7 @@
   </style>
 </head>
 <body>
-  <div id="confirmation-message" class="confirmation-message">✅ تم التوجه إلى السلة!</div>
+  <div id="confirmation-message" class="confirmation-message">✅ تمت إضافة المنتج إلى السلة!</div>
   <nav class="navbar navbar-expand-lg navbar-light">
     <a class="navbar-brand" href="/">
       <img src="static/img/logo1.png" alt="Logo"> <span id="brand-name">متجري</span>
@@ -463,7 +474,7 @@
       <ul class="navbar-nav">
         <li class="nav-item"><a class="nav-link" href="/" id="nav-home">الصفحة الرئيسية</a></li>
         <li class="nav-item"><a class="nav-link" href="/shop" id="nav-shop">المتجر</a></li>
-        <li class="nav-item"><a class="nav-link" href="/cart" id="nav-cart">السلة</a></li>
+        <li class="nav-item"><a class="nav-link" href="/cart" id="nav-cart">السلة <span id="cart-count-nav" class="cart-badge">0</span></a></li>
         <li class="nav-item"><a class="nav-link" href="/blog" id="nav-blog">المدونة</a></li>
         <li class="nav-item"><a class="nav-link" href="/shoes" id="nav-shoes">الأحذية</a></li>
         <li class="nav-item"><a class="nav-link" href="/clothes" id="nav-clothes">الملابس</a></li>
@@ -526,7 +537,7 @@
         footerPhone: "📞 هاتف: ",
         footerEmail: "📧 بريد إلكتروني: ",
         footerAddress: "📍 العنوان: غير محدد",
-        confirmationMessage: "✅ تم التوجه إلى السلة!",
+        confirmationMessage: "✅ تمت إضافة المنتج إلى السلة!",
         buyNow: "شراء الآن",
         discount: "% خصم!",
         bestSeller: "الأكثر مبيعاً"
@@ -552,7 +563,7 @@
         footerPhone: "📞 Phone: ",
         footerEmail: "📧 Email: ",
         footerAddress: "📍 Address: Not specified",
-        confirmationMessage: "✅ Redirected to cart!",
+        confirmationMessage: "✅ Product added to cart!",
         buyNow: "Buy Now",
         discount: "% OFF!",
         bestSeller: "Best Seller"
@@ -594,6 +605,8 @@
         })
         .catch(error => console.error("❌ خطأ في جلب المنتجات:", error));
 
+      updateCartCount();
+
       const heroSection = document.getElementById("hero-section");
       heroSection.addEventListener("click", function() {
         heroSection.classList.add("clicked");
@@ -601,7 +614,21 @@
       });
 
       const translateBtn = document.getElementById("translate-btn");
-      translateBtn.addEventListener("click", function() {
+      const navbarCollapse = document.getElementById("navbarNav");
+      const navbarToggler = document.querySelector(".navbar-toggler");
+
+      // إغلاق القائمة عند النقر على أي مكان في الصفحة
+      document.addEventListener("click", function(event) {
+        const isClickInsideNavbar = navbarCollapse.contains(event.target) || navbarToggler.contains(event.target);
+        if (!isClickInsideNavbar && navbarCollapse.classList.contains("show")) {
+          $(navbarCollapse).collapse("hide"); // إغلاق القائمة باستخدام Bootstrap
+        }
+      });
+
+      translateBtn.addEventListener("click", function(event) {
+        event.stopPropagation(); // منع إغلاق القائمة عند النقر على زر الترجمة
+        const isMenuOpen = navbarCollapse.classList.contains("show"); // حفظ حالة القائمة
+        
         currentLang = currentLang === 'ar' ? 'en' : 'ar';
         document.documentElement.lang = currentLang;
         document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
@@ -632,6 +659,11 @@
 
         const bestSellerIds = allProducts.filter(p => p.bestSeller).map(p => p.id);
         displayProducts(allProducts, "offers-and-best-sellers", bestSellerIds);
+
+        // إعادة فتح القائمة إذا كانت مفتوحة قبل التبديل
+        if (isMenuOpen) {
+          $(navbarCollapse).collapse("show");
+        }
       });
     });
 
@@ -666,7 +698,7 @@
             ${bestSellerBadge}
             <h5>${product.name}</h5>
             <p><del>L.E ${product.price}</del> <strong>L.E ${discountPrice}</strong></p>
-            <button class="btn" onclick="goToCart('${product.id}', event)">${translations[currentLang].buyNow}</button>
+            <button class="btn" onclick="addToCart('${product.id}', event)">${translations[currentLang].buyNow}</button>
           </div>`;
         container.innerHTML += productHTML;
       });
@@ -723,14 +755,28 @@
         });
 
         card.addEventListener('touchend', (e) => {
+          const touchEndX = e.changedTouches[0].clientX;
+          const touchEndY = e.changedTouches[0].clientY;
+          const diffX = touchEndX - touchStartX;
+          const diffY = touchEndY - touchStartY;
+
+          if (!touchMoved && Math.abs(diffX) < 20 && Math.abs(diffY) < 20) {
+            const productId = card.getAttribute('data-id');
+            openProductPage(productId);
+          }
+          e.stopPropagation();
+        });
+
+        card.addEventListener('click', (e) => {
+          const productId = card.getAttribute('data-id');
+          openProductPage(productId);
           e.stopPropagation();
         });
       });
     }
 
-    function goToCart(productId, event) {
+    function addToCart(productId, event) {
       event.stopPropagation();
-      // إضافة المنتج إلى السلة في localStorage
       let cart = JSON.parse(localStorage.getItem("cart")) || [];
       let existingProduct = cart.find(item => item.id === productId);
       if (existingProduct) {
@@ -739,14 +785,15 @@
         cart.push({ id: productId, quantity: 1 });
       }
       localStorage.setItem("cart", JSON.stringify(cart));
-
-      // عرض رسالة التأكيد
+      updateCartCount();
       showConfirmationMessage();
+    }
 
-      // الانتقال إلى صفحة السلة
-      setTimeout(() => {
-        window.location.href = "/cart";
-      }, 500); // تأخير بسيط للسماح برؤية رسالة التأكيد
+    function updateCartCount() {
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+      let cartCount = cart.reduce((total, item) => total + item.quantity, 0);
+      let navCartCount = document.getElementById("cart-count-nav");
+      if (navCartCount) { navCartCount.innerText = cartCount; }
     }
 
     function showConfirmationMessage() {
@@ -756,6 +803,13 @@
       setTimeout(() => { messageElement.style.display = "none"; }, 3000);
     }
 
+    function goToCart() {
+      window.location.href = "/cart";
+    }
+
+    function openProductPage(productId) {
+      window.location.href = `/product/${productId}`;
+    }
   </script>
 
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
