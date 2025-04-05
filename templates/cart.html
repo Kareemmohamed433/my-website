@@ -6,6 +6,8 @@
   <title>السلة - متجري</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --primary-color: #007bff;
@@ -17,13 +19,15 @@
       --dark-color: #343a40;
     }
     body {
-      background: linear-gradient(135deg, #74ebd5 0%, #acb6e5 100%);
+      background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+      font-family: 'Cairo', sans-serif;
       position: relative;
+      overflow-x: hidden;
     }
     body::before {
       content: "";
-      background: url('/static/images/logo.png') no-repeat center center;
-      background-size: 50%;
+      background: url('/static/images/logo.png') no-repeat center center, radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+      background-size: 40%, cover;
       opacity: 0.2;
       position: fixed;
       top: 0;
@@ -51,11 +55,11 @@
       display: flex;
       align-items: center;
       border: none;
-      padding: 15px;
+      padding: 20px;
       margin-bottom: 20px;
-      border-radius: 10px;
-      background: #fff;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      border-radius: 15px;
+      background: linear-gradient(145deg, #ffffff, #f1f1f1);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
       opacity: 0;
       transform: translateY(20px);
       transition: all 0.5s ease;
@@ -65,14 +69,16 @@
       transform: translateY(0);
     }
     .cart-item:hover {
-      transform: scale(1.02);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      transform: scale(1.03);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
     }
     .cart-item img {
       max-width: 100px;
       height: auto;
       border-radius: 10px;
       margin-left: 15px;
+      border: 2px solid #e0e0e0;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
       transition: transform 0.3s ease;
     }
     .cart-item:hover img {
@@ -111,13 +117,34 @@
       width: 90%;
       margin: 10px auto;
       font-size: 18px;
-      padding: 12px;
+      padding: 15px;
       border-radius: 25px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
       transition: all 0.3s ease;
     }
     .action-buttons .btn:hover {
       transform: translateY(-3px);
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #007bff, #0056b3);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(90deg, #0056b3, #003d82);
+    }
+    .btn-success {
+      background: linear-gradient(90deg, #28a745, #218838);
+    }
+    .btn-success:hover {
+      background: linear-gradient(90deg, #218838, #1c7430);
+    }
+    .btn-secondary {
+      background: linear-gradient(90deg, #6c757d, #5a6268);
+    }
+    .btn-secondary:hover {
+      background: linear-gradient(90deg, #5a6268, #4b5257);
     }
     .loading {
       display: none;
@@ -130,7 +157,7 @@
       position: fixed;
       top: 20px;
       right: 20px;
-      background: var(--primary-color);
+      background: linear-gradient(135deg, #007bff, #00c4cc);
       color: white;
       padding: 12px 18px;
       border-radius: 50%;
@@ -138,12 +165,13 @@
       cursor: pointer;
       z-index: 1200;
       transition: all 0.4s ease;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
       touch-action: none;
     }
     .cart-logo:hover {
       background: #0056b3;
-      transform: scale(1.15) rotate(10deg);
+      transform: scale(1.2) rotate(15deg);
+      box-shadow: 0 8px 20px rgba(0, 123, 255, 0.6);
     }
     .cart-badge {
       position: absolute;
@@ -160,13 +188,14 @@
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background-color: var(--warning-color);
-      color: #000;
-      padding: 12px 25px;
-      border-radius: 25px;
+      background: linear-gradient(90deg, #ffc107, #ffca28);
+      color: #333;
+      padding: 15px 30px;
+      border-radius: 30px;
+      font-weight: bold;
       font-size: 16px;
       z-index: 1200;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       text-align: center;
     }
     .nav-item.active .nav-link {
@@ -181,11 +210,6 @@
       0% { transform: scale(1); }
       50% { transform: scale(1.05); }
       100% { transform: scale(1); }
-    }
-    @keyframes bounceIn {
-      0% { opacity: 0; transform: translateY(-30px) scale(0.9); }
-      60% { opacity: 1; transform: translateY(5px) scale(1.05); }
-      100% { opacity: 1; transform: translateY(0) scale(1); }
     }
     @media (max-width: 768px) {
       .cart-item {
@@ -245,8 +269,11 @@
 
   <div class="container page-container">
     <h2 class="text-center" style="color: #333; margin-bottom: 30px; font-weight: bold;">🛒 السلة</h2>
-    <div id="cart-items" class="mt-4"></div>
+    <div id="cart-items" class=" Iron Cross"></div>
     <div class="total-price" id="total-price"></div>
+    <div class="chart-container" style="position: relative; height: 300px; width: 100%; max-width: 500px; margin: 30px auto;">
+      <canvas id="cartChart"></canvas>
+    </div>
     <div class="action-buttons">
       <button class="btn btn-secondary" onclick="goBack()">🔙 العودة</button>
       <button class="btn btn-primary" onclick="goToHome()">🏠 الرئيسية</button>
@@ -280,9 +307,11 @@
         .then(products => {
           cartItemsContainer.innerHTML = "";
           let totalPrice = 0;
+          let chartLabels = [];
+          let chartData = [];
+          let chartColors = [];
 
           cart.forEach(cartItem => {
-            // استخدام المفتاح "id" بدلاً من "_id"
             const product = products.find(p => p.id === cartItem.id);
             if (product) {
               const price = parseFloat(product.price) || 0;
@@ -290,6 +319,10 @@
               const discountPrice = discount > 0 ? (price - (price * discount / 100)) : price;
               const itemTotalPrice = discountPrice * (cartItem.quantity || 1);
               totalPrice += itemTotalPrice;
+
+              chartLabels.push(product.name || 'غير معروف');
+              chartData.push(itemTotalPrice);
+              chartColors.push(`hsl(${Math.random() * 360}, 70%, 50%)`);
 
               const itemHTML = `
                 <div class="cart-item">
@@ -308,12 +341,37 @@
                   <button class="remove-btn" onclick="removeFromCart('${product.id}')">❌</button>
                 </div>`;
               cartItemsContainer.innerHTML += itemHTML;
-            } else {
-              console.warn(`❌ المنتج بمعرف ${cartItem.id} غير موجود في قاعدة البيانات`);
             }
           });
 
           totalPriceContainer.innerHTML = `💰 السعر الإجمالي: $${totalPrice.toFixed(2)}`;
+
+          const ctx = document.getElementById('cartChart').getContext('2d');
+          new Chart(ctx, {
+            type: 'pie',
+            data: {
+              labels: chartLabels,
+              datasets: [{
+                data: chartData,
+                backgroundColor: chartColors,
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'top',
+                  labels: { font: { family: 'Cairo', size: 14 } }
+                },
+                title: {
+                  display: true,
+                  text: 'توزيع تكلفة المنتجات في السلة',
+                  font: { family: 'Cairo', size: 18 }
+                }
+              }
+            }
+          });
 
           const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {

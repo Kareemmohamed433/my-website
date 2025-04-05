@@ -702,6 +702,10 @@ def send_whatsapp_message(phone_number, message):
     logger.info(f"Sending WhatsApp message to {phone_number}: {message}")
     # أضف هنا الكود الفعلي لإرسال الرسالة عبر API WhatsApp
 
+def send_whatsapp_message(phone_number, message):
+    logger.info(f"محاكاة إرسال رسالة WhatsApp إلى {phone_number}: {message}")
+    # هنا يمكنك إضافة كود فعلي لـ WhatsApp API مثل Twilio
+
 @app.route('/api/place_order', methods=['POST'])
 def place_order():
     try:
@@ -712,15 +716,16 @@ def place_order():
 
         # التحقق من البيانات الإلزامية للدفع عند الاستلام
         if order_data.get("paymentMethod") == "delivery":
-            if not all(key in order_data for key in ["name", "phone", "altPhone", "address"]):
+            required_fields = ["name", "phone", "altPhone", "address"]
+            if not all(key in order_data and order_data[key] for key in required_fields):
                 return jsonify({"error": "❌ Missing required fields (name, phone, altPhone, address)"}), 400
 
-        # تفاصيل العميل مع جعل altPhone إلزاميًا وemail اختياريًا
+        # تفاصيل العميل
         customer_details = {
             "name": order_data.get("name", "Not specified"),
             "phone": order_data.get("phone", ""),
-            "altPhone": order_data.get("altPhone", ""),  # إلزامي للدفع عند الاستلام
-            "email": order_data.get("email", "Not specified"),  # اختياري
+            "altPhone": order_data.get("altPhone", ""),
+            "email": order_data.get("email", "Not specified"),
             "address": order_data.get("address", "Not specified")
         }
 
@@ -789,8 +794,8 @@ def place_order():
                 f"طلب جديد (الدفع عند الاستلام):\n"
                 f"الاسم: {customer_details['name']}\n"
                 f"رقم الهاتف الأساسي: {customer_details['phone']}\n"
-                f"رقم الهاتف الثاني: {customer_details['altPhone']}\n"  # إضافة الهاتف الثاني
-                f"البريد الإلكتروني: {customer_details['email'] if customer_details['email'] != 'Not specified' else 'غير محدد'}\n"  # اختياري
+                f"رقم الهاتف الثاني: {customer_details['altPhone']}\n"
+                f"البريد الإلكتروني: {customer_details['email'] if customer_details['email'] != 'Not specified' else 'غير محدد'}\n"
                 f"العنوان: {customer_details['address']}\n"
                 f"الإجمالي: {round(total, 2)}"
             )
@@ -813,34 +818,39 @@ def place_order():
     except Exception as e:
         logger.error(f"❌ Failed to place order: {e}")
         return jsonify({"error": f"❌ Failed to place order: {str(e)}"}), 500
-# Order confirmation
+
 @app.route('/order_confirmation/<order_id>')
 def order_confirmation(order_id):
     try:
+        if not ObjectId.is_valid(order_id):
+            return render_template("order_confirmation.html", order=None, error="رقم الطلب غير صالح")
+            
         order = orders_collection.find_one({"_id": ObjectId(order_id)})
         if not order:
-            return render_template("order_confirmation.html", order=None, error="Order not found")
-
-        logger.info(f"Raw items value: {order.get('items')}")
-
-        if "items" not in order or not isinstance(order["items"], (list, tuple)):
-            logger.warning(f"Invalid items format in order {order_id}: {order.get('items')}")
-            order["items"] = []
-
-        logger.info(f"Processed items value: {order['items']}")
-
-        for item in order["items"]:
+            return render_template("order_confirmation.html", order=None, error="لم يتم العثور على الطلب")
+        
+        order_items = order.get("items", [])
+        if not isinstance(order_items, (list, tuple)):
+            order_items = []
+        
+        for item in order_items:
             product = products_collection.find_one({"id": item["id"]})
-            if product and "image" in product:
-                item["image"] = product["image"]
-            else:
-                item["image"] = "/static/img/default-product.jpg"
-
-        return render_template("order_confirmation.html", order=order)
+            item["image"] = product.get("image", "/static/img/default-product.jpg") if product else "/static/img/default-product.jpg"
+        
+        order_date = order.get("date", datetime.utcnow())
+        if isinstance(order_date, str):
+            order_date = datetime.fromisoformat(order_date)
+        
+        return render_template(
+            "order_confirmation.html",
+            order=order,
+            order_items=order_items,
+            order_date=order_date.strftime("%Y-%m-%d %H:%M"),
+            payment_method=order.get("paymentMethod", "غير محدد")
+        )
     except Exception as e:
-        logger.error(f"❌ Error displaying order confirmation: {e}")
-        return render_template("order_confirmation.html", order=None, error=str(e))
-
+        logger.error(f"خطأ في عرض تأكيد الطلب: {str(e)}")
+        return render_template("order_confirmation.html", order=None, error="حدث خطأ أثناء معالجة الطلب")
 # Cart route
 @app.route('/cart')
 def cart():
