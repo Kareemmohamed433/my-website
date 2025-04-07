@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم الشاملة</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --dark-color: #34495e;
+            --light-color: #ecf0f1;
+            --guest-color: #9b59b6;
+            --registered-color: #3498db;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 20px 0;
+        }
+        
+        .sidebar-header {
+            text-align: center;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .menu-item i {
+            margin-left: 10px;
+        }
+        
+        .menu-item.active {
+            background-color: var(--primary-color);
+        }
+        
+        .main-content {
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background-color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+        }
+        
+        .stat-card.primary::before {
+            background-color: var(--primary-color);
+        }
+        
+        .stat-card.success::before {
+            background-color: var(--secondary-color);
+        }
+        
+        .stat-card.warning::before {
+            background-color: var(--warning-color);
+        }
+        
+        .stat-card.danger::before {
+            background-color: var(--danger-color);
+        }
+        
+        .stat-card.guest::before {
+            background-color: var(--guest-color);
+        }
+        
+        .stat-card .stat-title {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .stat-change {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container, .table-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .chart-container {
+            min-height: 400px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-left: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        table th, table td {
+            padding: 12px 15px;
+            text-align: right;
+            border-bottom: 1px solid #eee;
+        }
+        
+        table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .badge-warning {
+            background-color: #fef3c7;
+            color: var(--warning-color);
+        }
+        
+        .badge-primary {
+            background-color: #dbeafe;
+            color: var(--primary-color);
+        }
+        
+        .badge-guest {
+            background-color: #e9d5ff;
+            color: var(--guest-color);
+        }
+        
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            z-index: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .product-details {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        
+        .product-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .product-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-left: 20px;
+        }
+        
+        .product-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 20px;
+        }
+        
+        .product-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .product-meta-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .product-meta-item i {
+            margin-left: 5px;
+            color: var(--primary-color);
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .animated {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .customer-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .customer-charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 992px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .charts-section, .customer-charts {
+                grid-template-columns: 1fr;
+            }
+            
+            .customer-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>لوحة التحكم</h2>
+                <p>نظام إدارة المتجر</p>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-item active" data-page="dashboard"><i class="fas fa-tachometer-alt"></i><span>الرئيسية</span></div>
+                <div class="menu-item" data-page="products"><i class="fas fa-box"></i><span>المنتجات</span></div>
+                <div class="menu-item" data-page="customers"><i class="fas fa-users"></i><span>العملاء</span></div>
+                <div class="menu-item" data-page="orders"><i class="fas fa-shopping-cart"></i><span>الطلبات</span></div>
+                <div class="menu-item" data-page="reports"><i class="fas fa-chart-line"></i><span>التقارير</span></div>
+                <div class="menu-item" data-page="settings"><i class="fas fa-cog"></i><span>الإعدادات</span></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <div class="page-title" id="mainTitle">لوحة تحليل المنتجات والعملاء</div>
+                <div class="user-info">
+                    <div class="dropdown">
+                        <span>مرحباً، <span id="username">جاري التحميل</span> <i class="fas fa-chevron-down"></i></span>
+                        <div class="dropdown-content">
+                            <div class="dropdown-item"><i class="fas fa-user"></i> الملف الشخصي</div>
+                            <div class="dropdown-item"><i class="fas fa-cog"></i> الإعدادات</div>
+                            <div class="dropdown-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</div>
+                        </div>
+                    </div>
+                    <img src="/static/img/default-user.jpg" alt="صورة المستخدم">
+                </div>
+            </div>
+
+            <!-- قسم لوحة التحكم الرئيسية -->
+            <div id="dashboardContent">
+                <div class="product-selector" style="margin-bottom: 20px;">
+                    <label for="productSelect">اختر منتجًا للتحليل:</label>
+                    <select id="productSelect" class="form-control" style="width: 300px; padding: 5px;">
+                        <option value="">-- جميع المنتجات --</option>
+                    </select>
+                </div>
+
+                <div class="stats-cards">
+                    <div class="stat-card primary animated">
+                        <div class="stat-title">إجمالي المبيعات</div>
+                        <div class="stat-value" id="totalSales">0 ر.س</div>
+                        <div class="stat-change" id="salesChange"></div>
+                    </div>
+                    <div class="stat-card success animated">
+                        <div class="stat-title">إجمالي العملاء</div>
+                        <div class="stat-value" id="totalCustomers">0</div>
+                        <div class="stat-change" id="customersChange"></div>
+                    </div>
+                    <div class="stat-card warning animated">
+                        <div class="stat-title">إجمالي المنتجات</div>
+                        <div class="stat-value" id="totalProducts">0</div>
+                        <div class="stat-change" id="productsChange"></div>
+                    </div>
+                    <div class="stat-card danger animated">
+                        <div class="stat-title">الطلبات الملغاة</div>
+                        <div class="stat-value" id="canceledOrders">0</div>
+                        <div class="stat-change" id="canceledChange"></div>
+                    </div>
+                </div>
+
+                <div class="product-details animated">
+                    <div class="product-header">
+                        <img src="/static/img/default-product.jpg" alt="صورة المنتج" class="product-image" id="productImage">
+                        <div class="product-info">
+                            <h3 id="productName">جاري التحميل...</h3>
+                            <p id="productDescription">جاري التحميل...</p>
+                            <div class="product-meta">
+                                <div class="product-meta-item"><i class="fas fa-tag"></i><span id="productCategory">غير محدد</span></div>
+                                <div class="product-meta-item"><i class="fas fa-barcode"></i><span id="productId">غير محدد</span></div>
+                                <div class="product-meta-item"><i class="fas fa-star"></i><span id="productRating">0 (0 تقييم)</span></div>
+                                <div class="product-meta-item"><i class="fas fa-shopping-cart"></i><span id="productSales">تم بيعه 0 مرة</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tabs">
+                        <div class="tab active" data-tab="overview">نظرة عامة</div>
+                        <div class="tab" data-tab="sales">المبيعات</div>
+                        <div class="tab" data-tab="customers">العملاء</div>
+                        <div class="tab" data-tab="inventory">المخزون</div>
+                    </div>
+
+                    <div class="tab-content active" id="overview">
+                        <div class="charts-section">
+                            <div class="chart-container">
+                                <div class="section-title"><i class="fas fa-chart-bar"></i><span>أداء المنتج خلال السنة</span></div>
+                                <canvas id="productYearlyChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <div class="section-title"><i class="fas fa-chart-pie"></i><span>أعلى 10 منتجات مبيعاً</span></div>
+                                <canvas id="topProductsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="sales">
+                        <div class="charts-section">
+                            <div class="chart-container">
+                                <div class="section-title"><i class="fas fa-chart-line"></i><span>مبيعات المنتج الشهرية</span></div>
+                                <canvas id="productMonthlyChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <div class="section-title"><i class="fas fa-chart-line"></i><span>مقارنة مبيعات الفئات</span></div>
+                                <canvas id="categoriesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="customers">
+                        <div class="charts-section">
+                            <div class="chart-container">
+                                <div class="section-title"><i class="fas fa-chart-pie"></i><span>توزيع العملاء</span></div>
+                                <canvas id="customerTypeChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <div class="section-title"><i class="fas fa-chart-bar"></i><span>أفضل 5 عملاء إنفاقاً</span></div>
+                                <canvas id="topCustomersChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <div class="section-title"><i class="fas fa-users"></i><span>قائمة العملاء</span></div>
+                            <table id="usersTable">
+                                <thead>
+                                    <tr><th>اسم المستخدم</th><th>البريد</th><th>النوع</th><th>عدد الطلبات</th><th>إجمالي العناصر</th><th>إجمالي الإنفاق</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="inventory">
+                        <div class="charts-section">
+                            <div class="chart-container">
+                                <div class="section-title"><i class="fas fa-warehouse"></i><span>مستويات المخزون</span></div>
+                                <canvas id="inventoryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قسم المنتجات -->
+            <div class="hidden" id="productsContent">
+                <div class="table-container animated">
+                    <div class="section-title"><i class="fas fa-exclamation-circle"></i><span>المنتجات التي تحتاج انتباه</span></div>
+                    <table id="attentionProductsTable">
+                        <thead>
+                            <tr><th>رقم المنتج</th><th>اسم المنتج</th><th>المخزون</th><th>آخر بيع</th><th>الحالة</th><th>إجراءات</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- قسم الطلبات -->
+            <div class="hidden" id="ordersContent">
+                <div class="charts-section animated">
+                    <div class="chart-container">
+                        <div class="section-title"><i class="fas fa-shopping-cart"></i><span>تحليل حالات الطلبات</span></div>
+                        <canvas id="ordersStatusChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="section-title"><i class="fas fa-dollar-sign"></i><span>إجمالي الطلبات الشهرية</span></div>
+                        <canvas id="ordersMonthlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قسم العملاء (الصفحة الرئيسية للعملاء) -->
+            <div class="hidden" id="customersContent">
+                <div class="customer-stats animated">
+                    <div class="stat-card primary">
+                        <div class="stat-title">إجمالي العملاء</div>
+                        <div class="stat-value" id="totalCustomersCount">0</div>
+                        <div class="stat-change"><i class="fas fa-arrow-up"></i> 12% عن الشهر الماضي</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-title">العملاء المسجلين</div>
+                        <div class="stat-value" id="registeredCustomers">0</div>
+                        <div class="stat-change"><i class="fas fa-arrow-up"></i> 8% عن الشهر الماضي</div>
+                    </div>
+                    <div class="stat-card guest">
+                        <div class="stat-title">العملاء الضيوف</div>
+                        <div class="stat-value" id="guestCustomers">0</div>
+                        <div class="stat-change"><i class="fas fa-arrow-up"></i> 15% عن الشهر الماضي</div>
+                    </div>
+                </div>
+
+                <div class="customer-charts animated">
+                    <div class="chart-container">
+                        <div class="section-title"><i class="fas fa-chart-pie"></i><span>توزيع العملاء</span></div>
+                        <canvas id="customersPieChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="section-title"><i class="fas fa-chart-bar"></i><span>أفضل 10 عملاء إنفاقاً</span></div>
+                        <canvas id="topSpendersChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="table-container animated">
+                    <div class="section-title"><i class="fas fa-users"></i><span>قائمة جميع العملاء</span></div>
+                    <table id="allCustomersTable">
+                        <thead>
+                            <tr><th>اسم المستخدم</th><th>البريد</th><th>النوع</th><th>عدد الطلبات</th><th>إجمالي العناصر</th><th>إجمالي الإنفاق</th><th>آخر طلب</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = window.location.origin;
+        let currentProductId = new URLSearchParams(window.location.search).get('id');
+        let productsData = [];
+        let ordersData = [];
+        let usersData = [];
+        let yearlyChart, monthlyChart, topProductsChart, categoriesChart, inventoryChart, ordersStatusChart, ordersMonthlyChart;
+        let customerTypeChart, topCustomersChart, customersPieChart, topSpendersChart;
+
+        // Helper function to get CSS variable value
+        function getCssVariable(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+        // التحقق من تسجيل الدخول
+        async function checkAuth() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/check_auth`, { credentials: 'include' });
+                if (!response.ok) throw new Error('غير مسجل');
+                const data = await response.json();
+                if (!data.authenticated || data.role !== 'admin') {
+                    window.location.href = '/login.html';
+                    return false;
+                }
+                document.getElementById('username').textContent = data.username || 'أدمن';
+                return true;
+            } catch (error) {
+                console.error('خطأ في التحقق من المصادقة:', error);
+                window.location.href = '/login.html';
+                return false;
+            }
+        }
+
+        // جلب بيانات المنتجات
+        async function fetchProductsData() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/products`, { credentials: 'include' });
+                if (!response.ok) throw new Error('خطأ في جلب المنتجات');
+                productsData = await response.json();
+                populateProductSelect(productsData);
+                return productsData;
+            } catch (error) {
+                console.error('خطأ في جلب بيانات المنتجات:', error);
+                showErrorToast('فشل في جلب بيانات المنتجات');
+                return [];
+            }
+        }
+
+        // جلب بيانات الطلبات
+        async function fetchOrdersData() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders`, { credentials: 'include' });
+                if (!response.ok) throw new Error('خطأ في جلب الطلبات');
+                ordersData = await response.json();
+                
+                // Calculate total spent for each user
+                const userSpending = {};
+                ordersData.forEach(order => {
+                    const email = order.customerDetails?.email || 'guest';
+                    if (!userSpending[email]) {
+                        userSpending[email] = {
+                            totalSpent: 0,
+                            orders: []
+                        };
+                    }
+                    userSpending[email].totalSpent += order.total || 0;
+                    userSpending[email].orders.push(order);
+                });
+                
+                // Add totalSpent to usersData
+                if (usersData && usersData.length) {
+                    usersData.forEach(user => {
+                        if (user.email && userSpending[user.email]) {
+                            user.totalSpent = userSpending[user.email].totalSpent;
+                            user.orders = userSpending[user.email].orders;
+                        }
+                    });
+                }
+                
+                return ordersData;
+            } catch (error) {
+                console.error('خطأ في جلب بيانات الطلبات:', error);
+                showErrorToast('فشل في جلب بيانات الطلبات');
+                return [];
+            }
+        }
+
+        // جلب بيانات العملاء
+        async function fetchUsersData() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/users`, { credentials: 'include' });
+                if (!response.ok) throw new Error('خطأ في جلب العملاء');
+                usersData = await response.json();
+                updateCustomersStats(usersData);
+                updateUsersTable(usersData);
+                updateAllCustomersTable(usersData);
+                return usersData;
+            } catch (error) {
+                console.error('خطأ في جلب بيانات العملاء:', error);
+                showErrorToast('فشل في جلب بيانات العملاء');
+                return [];
+            }
+        }
+
+        // ملء قائمة اختيار المنتجات
+        function populateProductSelect(products) {
+            const select = document.getElementById('productSelect');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">-- جميع المنتجات --</option>';
+            products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = product.name;
+                select.appendChild(option);
+            });
+            if (currentProductId) select.value = currentProductId;
+            select.addEventListener('change', () => {
+                currentProductId = select.value;
+                updateDashboard();
+            });
+        }
+
+        // تحديث إحصائيات العملاء
+        function updateCustomersStats(users) {
+            if (!users || !users.length) return;
+            
+            const totalCustomers = users.length;
+            const registeredCustomers = users.filter(u => u.role !== 'guest').length;
+            const guestCustomers = users.filter(u => u.role === 'guest').length;
+            
+            const totalCustomersEl = document.getElementById('totalCustomersCount');
+            const registeredCustomersEl = document.getElementById('registeredCustomers');
+            const guestCustomersEl = document.getElementById('guestCustomers');
+            
+            if (totalCustomersEl) totalCustomersEl.textContent = totalCustomers;
+            if (registeredCustomersEl) registeredCustomersEl.textContent = registeredCustomers;
+            if (guestCustomersEl) guestCustomersEl.textContent = guestCustomers;
+            
+            // تحديث مخطط توزيع العملاء
+            updateCustomersCharts(registeredCustomers, guestCustomers);
+        }
+
+        // تحديث مخططات العملاء
+        function updateCustomersCharts(registeredCount, guestCount) {
+            const registeredColor = getCssVariable('--registered-color');
+            const guestColor = getCssVariable('--guest-color');
+            const primaryColor = getCssVariable('--primary-color');
+
+            // مخطط دائري لتوزيع العملاء
+            const customersPieCtx = document.getElementById('customersPieChart')?.getContext('2d');
+            if (customersPieCtx) {
+                if (customersPieChart) customersPieChart.destroy();
+                customersPieChart = new Chart(customersPieCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['عملاء مسجلين', 'عملاء ضيوف'],
+                        datasets: [{
+                            data: [registeredCount, guestCount],
+                            backgroundColor: [registeredColor, guestColor],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: { 
+                                callbacks: { 
+                                    label: (context) => {
+                                        const total = registeredCount + guestCount;
+                                        const percentage = total > 0 ? Math.round(context.parsed * 100 / total) : 0;
+                                        return `${context.label}: ${context.raw} (${percentage}%)`;
+                                    } 
+                                } 
+                            }
+                        }
+                    }
+                });
+            }
+
+            // مخطط أفضل العملاء إنفاقاً
+            const topSpenders = [...usersData]
+                .filter(u => (u.totalSpent || 0) > 0)
+                .sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0))
+                .slice(0, 10);
+            
+            const topSpendersCtx = document.getElementById('topSpendersChart')?.getContext('2d');
+            if (topSpendersCtx) {
+                if (topSpendersChart) topSpendersChart.destroy();
+                topSpendersChart = new Chart(topSpendersCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: topSpenders.map(u => u.username || u.email),
+                        datasets: [{
+                            label: 'إجمالي الإنفاق (ر.س)',
+                            data: topSpenders.map(u => u.totalSpent || 0),
+                            backgroundColor: topSpenders.map(u => u.role === 'guest' ? guestColor : primaryColor)
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { x: { beginAtZero: true } }
+                    }
+                });
+            }
+        }
+
+        // تحديث جدول العملاء في لوحة التحكم الرئيسية
+        function updateUsersTable(users) {
+            const tableBody = document.getElementById('usersTable')?.querySelector('tbody');
+            if (!tableBody) return;
+            
+            tableBody.innerHTML = '';
+            
+            // عرض فقط 10 عملاء في لوحة التحكم الرئيسية
+            const limitedUsers = users.slice(0, 10);
+            
+            limitedUsers.forEach(user => {
+                const row = document.createElement('tr');
+                const userType = user.role === 'guest' ? 
+                    '<span class="badge badge-guest">ضيف</span>' : 
+                    '<span class="badge badge-primary">مسجل</span>';
+                
+                row.innerHTML = `
+                    <td>${user.username || 'ضيف'}</td>
+                    <td>${user.email || 'غير متاح'}</td>
+                    <td>${userType}</td>
+                    <td>${user.orderCount || 0}</td>
+                    <td>${user.totalItemsOrdered || 0}</td>
+                    <td>${(user.totalSpent || 0).toFixed(2)} ر.س</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // تحديث جدول جميع العملاء في صفحة العملاء
+        function updateAllCustomersTable(users) {
+            const tableBody = document.getElementById('allCustomersTable')?.querySelector('tbody');
+            if (!tableBody) return;
+            
+            tableBody.innerHTML = '';
+            
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                const userType = user.role === 'guest' ? 
+                    '<span class="badge badge-guest">ضيف</span>' : 
+                    '<span class="badge badge-primary">مسجل</span>';
+                
+                // حساب إجمالي الإنفاق للعميل
+                const totalSpent = user.totalSpent || 
+                    (user.orders ? user.orders.reduce((sum, order) => sum + (order.total || 0), 0) : 0);
+                
+                // الحصول على تاريخ آخر طلب
+                const lastOrder = user.orders && user.orders.length > 0 ? 
+                    new Date(user.orders[0].created_at).toLocaleDateString('ar-SA') : 'لا يوجد';
+                
+                row.innerHTML = `
+                    <td>${user.username || 'ضيف'}</td>
+                    <td>${user.email || 'غير متاح'}</td>
+                    <td>${userType}</td>
+                    <td>${user.orderCount || 0}</td>
+                    <td>${user.totalItemsOrdered || 0}</td>
+                    <td>${totalSpent.toFixed(2)} ر.س</td>
+                    <td>${lastOrder}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // حساب مبيعات المنتج
+        function calculateProductSales(productId) {
+            if (!ordersData || !ordersData.length) return 0;
+            
+            let totalSales = 0;
+            ordersData.forEach(order => {
+                if (order.items && order.items.length) {
+                    order.items.forEach(item => {
+                        if (item.id === productId) {
+                            totalSales += item.quantity || 0;
+                        }
+                    });
+                }
+            });
+            return totalSales;
+        }
+
+        // تحديث الإحصائيات العامة
+        function updateStats() {
+            const totalSales = ordersData.reduce((sum, order) => sum + (order.total || 0), 0);
+            const totalCustomersEl = document.getElementById('totalSales');
+            const totalCustomersCountEl = document.getElementById('totalCustomers');
+            const totalProductsEl = document.getElementById('totalProducts');
+            const canceledOrdersEl = document.getElementById('canceledOrders');
+            
+            if (totalCustomersEl) totalCustomersEl.textContent = `${totalSales.toFixed(2)} ر.س`;
+            if (totalCustomersCountEl) totalCustomersCountEl.textContent = usersData.length;
+            if (totalProductsEl) totalProductsEl.textContent = productsData.length;
+            if (canceledOrdersEl) canceledOrdersEl.textContent = ordersData.filter(o => o.status === 'canceled').length;
+        }
+
+        // تحديث تفاصيل المنتج
+        function updateProductDetails(product) {
+            const productImageEl = document.getElementById('productImage');
+            const productNameEl = document.getElementById('productName');
+            const productDescriptionEl = document.getElementById('productDescription');
+            const productCategoryEl = document.getElementById('productCategory');
+            const productIdEl = document.getElementById('productId');
+            const productRatingEl = document.getElementById('productRating');
+            const productSalesEl = document.getElementById('productSales');
+            
+            if (!productImageEl || !productNameEl || !productDescriptionEl || 
+                !productCategoryEl || !productIdEl || !productRatingEl || !productSalesEl) {
+                return;
+            }
+
+            if (product) {
+                productImageEl.src = product.image || '/static/img/default-product.jpg';
+                productNameEl.textContent = product.name || 'غير محدد';
+                productDescriptionEl.textContent = product.description || 'لا يوجد وصف';
+                productCategoryEl.textContent = product.category || 'غير محدد';
+                productIdEl.textContent = product.id || 'غير محدد';
+                productRatingEl.textContent = `${product.average_rating || 0} (${product.ratings ? product.ratings.length : 0} تقييم)`;
+                const totalSales = calculateProductSales(product.id);
+                productSalesEl.textContent = `تم بيعه ${totalSales} مرة`;
+            } else {
+                productImageEl.src = '/static/img/default-product.jpg';
+                productNameEl.textContent = 'جميع المنتجات';
+                productDescriptionEl.textContent = 'إحصائيات شاملة لجميع المنتجات';
+                productCategoryEl.textContent = 'جميع الفئات';
+                productIdEl.textContent = 'غير محدد';
+                productRatingEl.textContent = 'غير متاح';
+                const totalSales = ordersData.reduce((sum, order) => sum + (order.items?.reduce((s, i) => s + (i.quantity || 0), 0) || 0), 0);
+                productSalesEl.textContent = `تم بيعه ${totalSales} مرة`;
+            }
+        }
+
+        // تهيئة المخططات والجداول
+        function initChartsAndTables(activeTab = 'overview') {
+            const product = currentProductId ? productsData.find(p => p.id === currentProductId) : null;
+            const primaryColor = getCssVariable('--primary-color');
+            const guestColor = getCssVariable('--guest-color');
+            const registeredColor = getCssVariable('--registered-color');
+
+            // تدمير المخططات القديمة إذا كانت موجودة
+            if (yearlyChart) yearlyChart.destroy();
+            if (monthlyChart) monthlyChart.destroy();
+            if (topProductsChart) topProductsChart.destroy();
+            if (categoriesChart) categoriesChart.destroy();
+            if (inventoryChart) inventoryChart.destroy();
+            if (ordersStatusChart) ordersStatusChart.destroy();
+            if (ordersMonthlyChart) ordersMonthlyChart.destroy();
+            if (customerTypeChart) customerTypeChart.destroy();
+            if (topCustomersChart) topCustomersChart.destroy();
+
+            // أداء المنتج خلال السنة (تبويب "نظرة عامة")
+            if (activeTab === 'overview') {
+                const yearlySales = Array(12).fill(0);
+                ordersData.forEach(order => {
+                    if (order.items && order.items.length) {
+                        order.items.forEach(item => {
+                            if (!product || item.id === product.id) {
+                                const date = new Date(order.created_at);
+                                const month = date.getMonth();
+                                yearlySales[month] += item.quantity || 0;
+                            }
+                        });
+                    }
+                });
+                const yearlyCtx = document.getElementById('productYearlyChart')?.getContext('2d');
+                if (yearlyCtx) {
+                    yearlyChart = new Chart(yearlyCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+                            datasets: [{
+                                label: product ? 'مبيعات المنتج' : 'إجمالي المبيعات',
+                                data: yearlySales,
+                                borderColor: primaryColor,
+                                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+
+                const topProducts = productsData.map(p => ({
+                    name: p.name,
+                    sales: calculateProductSales(p.id)
+                })).sort((a, b) => b.sales - a.sales).slice(0, 10);
+                
+                const topProductsCtx = document.getElementById('topProductsChart')?.getContext('2d');
+                if (topProductsCtx) {
+                    topProductsChart = new Chart(topProductsCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: topProducts.map(p => p.name),
+                            datasets: [{
+                                label: 'عدد المبيعات',
+                                data: topProducts.map(p => p.sales),
+                                backgroundColor: ['#3498db', '#2ecc71', '#9b59b6', '#f1c40f', '#e67e22', '#e74c3c', '#34495e', '#95a5a6', '#16a085', '#f39c12']
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            plugins: { legend: { display: false } },
+                            scales: { x: { beginAtZero: true } }
+                        }
+                    });
+                }
+            }
+
+            // مبيعات المنتج الشهرية (تبويب "المبيعات")
+            if (activeTab === 'sales') {
+                const monthlySales = Array(4).fill(0);
+                const currentMonth = new Date().getMonth();
+                ordersData.forEach(order => {
+                    if (order.items && order.items.length) {
+                        order.items.forEach(item => {
+                            const date = new Date(order.created_at);
+                            if (date.getMonth() === currentMonth) {
+                                if (!product || item.id === product.id) {
+                                    const week = Math.floor(date.getDate() / 7);
+                                    monthlySales[week] += item.quantity || 0;
+                                }
+                            }
+                        });
+                    }
+                });
+                const monthlyCtx = document.getElementById('productMonthlyChart')?.getContext('2d');
+                if (monthlyCtx) {
+                    monthlyChart = new Chart(monthlyCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['الأسبوع 1', 'الأسبوع 2', 'الأسبوع 3', 'الأسبوع 4'],
+                            datasets: [{
+                                label: product ? `مبيعات ${product.name}` : 'مبيعات جميع المنتجات',
+                                data: monthlySales,
+                                backgroundColor: 'rgba(52, 152, 219, 0.7)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'top' } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+
+                const categoriesSales = {};
+                productsData.forEach(p => {
+                    const sales = calculateProductSales(p.id);
+                    categoriesSales[p.category] = (categoriesSales[p.category] || 0) + sales;
+                });
+                const categoriesCtx = document.getElementById('categoriesChart')?.getContext('2d');
+                if (categoriesCtx) {
+                    categoriesChart = new Chart(categoriesCtx, {
+                        type: 'radar',
+                        data: {
+                            labels: Object.keys(categoriesSales),
+                            datasets: [{
+                                label: 'مبيعات الفئات',
+                                data: Object.values(categoriesSales),
+                                backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                                borderColor: primaryColor,
+                                pointBackgroundColor: primaryColor
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'top' } },
+                            scales: { r: { angleLines: { display: true }, suggestedMin: 0 } }
+                        }
+                    });
+                }
+            }
+
+            // العملاء (تبويب "العملاء")
+            if (activeTab === 'customers') {
+                // توزيع العملاء حسب النوع
+                const registeredCustomers = usersData.filter(u => u.role !== 'guest').length;
+                const guestCustomers = usersData.filter(u => u.role === 'guest').length;
+                
+                const customerTypeCtx = document.getElementById('customerTypeChart')?.getContext('2d');
+                if (customerTypeCtx) {
+                    customerTypeChart = new Chart(customerTypeCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['عملاء مسجلين', 'عملاء ضيوف'],
+                            datasets: [{
+                                data: [registeredCustomers, guestCustomers],
+                                backgroundColor: [registeredColor, guestColor],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: { 
+                                    callbacks: { 
+                                        label: (context) => {
+                                            const total = registeredCustomers + guestCustomers;
+                                            const percentage = total > 0 ? Math.round(context.parsed * 100 / total) : 0;
+                                            return `${context.label}: ${context.raw} (${percentage}%)`;
+                                        } 
+                                    } 
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // أفضل 5 عملاء إنفاقًا
+                const topCustomers = [...usersData]
+                    .filter(u => (u.totalSpent || 0) > 0)
+                    .sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0))
+                    .slice(0, 5);
+                
+                const topCustomersCtx = document.getElementById('topCustomersChart')?.getContext('2d');
+                if (topCustomersCtx) {
+                    topCustomersChart = new Chart(topCustomersCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: topCustomers.map(u => u.username || u.email),
+                            datasets: [{
+                                label: 'إجمالي الإنفاق (ر.س)',
+                                data: topCustomers.map(u => u.totalSpent || 0),
+                                backgroundColor: topCustomers.map(u => u.role === 'guest' ? guestColor : primaryColor)
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+            }
+
+            // مستويات المخزون (تبويب "المخزون")
+            if (activeTab === 'inventory') {
+                const inventoryCtx = document.getElementById('inventoryChart')?.getContext('2d');
+                if (inventoryCtx) {
+                    inventoryChart = new Chart(inventoryCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['المخزون الحالي', 'حد إعادة الطلب', 'المخزون الأمثل'],
+                            datasets: [{
+                                label: 'كمية المخزون',
+                                data: product ? [product.amount || 0, 10, 30] : [productsData.reduce((sum, p) => sum + (p.amount || 0), 0), 0, 0],
+                                backgroundColor: ['#3498db', '#f1c40f', '#2ecc71']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+            }
+
+            // المنتجات التي تحتاج انتباه (عند النقر على "المنتجات" في الشريط الجانبي)
+            if (activeTab === 'products') {
+                const attentionProducts = productsData.filter(p => (p.amount || 0) < 3);
+                const attentionTableBody = document.getElementById('attentionProductsTable')?.querySelector('tbody');
+                if (attentionTableBody) {
+                    attentionTableBody.innerHTML = '';
+                    attentionProducts.forEach(p => {
+                        const lastSale = ordersData
+                            .filter(o => o.items && o.items.some(i => i.id === p.id))
+                            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]?.created_at || 'غير متاح';
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${p.id}</td>
+                            <td>${p.name}</td>
+                            <td>${p.amount || 0}</td>
+                            <td>${lastSale}</td>
+                            <td><span class="badge badge-warning">مخزون منخفض</span></td>
+                            <td><button class="btn btn-sm btn-primary" onclick="restock('${p.id}')">إعادة تعبئة</button></td>
+                        `;
+                        attentionTableBody.appendChild(row);
+                    });
+                }
+            }
+
+            // تحليل الطلبات (عند النقر على "الطلبات" في الشريط الجانبي)
+            if (activeTab === 'orders') {
+                const statusCounts = {};
+                ordersData.forEach(order => {
+                    statusCounts[order.status] = (statusCounts[order.status] || 0) + 1;
+                });
+                const ordersStatusCtx = document.getElementById('ordersStatusChart')?.getContext('2d');
+                if (ordersStatusCtx) {
+                    ordersStatusChart = new Chart(ordersStatusCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(statusCounts),
+                            datasets: [{
+                                label: 'حالات الطلبات',
+                                data: Object.values(statusCounts),
+                                backgroundColor: ['#3498db', '#e74c3c', '#2ecc71', '#f39c12']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'top' } }
+                        }
+                    });
+                }
+
+                const monthlyOrders = Array(12).fill(0);
+                ordersData.forEach(order => {
+                    const date = new Date(order.created_at);
+                    const month = date.getMonth();
+                    monthlyOrders[month] += order.total || 0;
+                });
+                const ordersMonthlyCtx = document.getElementById('ordersMonthlyChart')?.getContext('2d');
+                if (ordersMonthlyCtx) {
+                    ordersMonthlyChart = new Chart(ordersMonthlyCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+                            datasets: [{
+                                label: 'إجمالي الطلبات (ر.س)',
+                                data: monthlyOrders,
+                                backgroundColor: primaryColor
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'top' } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+            }
+        }
+
+        // إعادة تعبئة المخزون
+        async function restock(productId) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/products/${productId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: 10 }),
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    alert('تم إعادة تعبئة المخزون بنجاح');
+                    await fetchProductsData();
+                    updateDashboard();
+                } else {
+                    throw new Error('فشل في إعادة التعبئة');
+                }
+            } catch (error) {
+                console.error('خطأ في إعادة التعبئة:', error);
+                alert('حدث خطأ أثناء إعادة تعبئة المخزون');
+            }
+        }
+
+        // عرض رسالة خطأ
+        function showErrorToast(message) {
+            // يمكنك استبدال هذا بتنفيذ فعلي لعرض الرسائل
+            console.error('Error:', message);
+            alert(message);
+        }
+
+        // تحديث لوحة التحكم
+        async function updateDashboard(activeTab = 'overview') {
+            const product = currentProductId ? productsData.find(p => p.id === currentProductId) : null;
+            updateProductDetails(product);
+            updateStats();
+            initChartsAndTables(activeTab);
+        }
+
+        // إدارة التبويبات داخل تفاصيل المنتج
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    const tabContent = document.getElementById(tab.dataset.tab);
+                    if (tabContent) tabContent.classList.add('active');
+                    updateDashboard(tab.dataset.tab);
+                });
+            });
+        }
+
+        // إدارة عناصر الشريط الجانبي
+        function setupSidebar() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    // إخفاء جميع أقسام المحتوى
+                    document.getElementById('dashboardContent')?.classList.add('hidden');
+                    document.getElementById('productsContent')?.classList.add('hidden');
+                    document.getElementById('ordersContent')?.classList.add('hidden');
+                    document.getElementById('customersContent')?.classList.add('hidden');
+                    
+                    const page = item.dataset.page;
+                    const mainTitleEl = document.getElementById('mainTitle');
+                    if (mainTitleEl) mainTitleEl.textContent = item.querySelector('span').textContent;
+                    
+                    if (page === 'dashboard') {
+                        document.getElementById('dashboardContent')?.classList.remove('hidden');
+                        updateDashboard('overview');
+                    } else if (page === 'products') {
+                        document.getElementById('productsContent')?.classList.remove('hidden');
+                        updateDashboard('products');
+                    } else if (page === 'orders') {
+                        document.getElementById('ordersContent')?.classList.remove('hidden');
+                        updateDashboard('orders');
+                    } else if (page === 'customers') {
+                        document.getElementById('customersContent')?.classList.remove('hidden');
+                        updateCustomersStats(usersData);
+                    }
+                });
+            });
+        }
+
+        // تسجيل الخروج
+        async function logout() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/logout`, { 
+                    method: 'POST', 
+                    credentials: 'include' 
+                });
+                if (response.ok) {
+                    window.location.href = '/login.html';
+                } else {
+                    throw new Error('فشل في تسجيل الخروج');
+                }
+            } catch (error) {
+                console.error('خطأ في تسجيل الخروج:', error);
+                alert('حدث خطأ أثناء محاولة تسجيل الخروج');
+            }
+        }
+
+        // تهيئة الصفحة
+        async function init() {
+            const isAuthenticated = await checkAuth();
+            if (!isAuthenticated) return;
+            
+            try {
+                await Promise.all([
+                    fetchProductsData(),
+                    fetchOrdersData(),
+                    fetchUsersData()
+                ]);
+                
+                updateDashboard('overview');
+                setupTabs();
+                setupSidebar();
+            } catch (error) {
+                console.error('خطأ في تهيئة الصفحة:', error);
+                showErrorToast('حدث خطأ أثناء تحميل البيانات');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

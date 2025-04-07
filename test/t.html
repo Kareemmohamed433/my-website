@@ -1,441 +1,916 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>إتمام الشراء - متجري</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary-color: #007bff;
-      --secondary-color: #6c757d;
-      --success-color: #28a745;
-      --danger-color: #dc3545;
-      --warning-color: #ffc107;
-      --light-color: #f8f9fa;
-      --dark-color: #343a40;
-    }
-    body {
-      background: linear-gradient(135deg, rgba(30,60,114,0.8), rgba(42,82,152,0.8)), url('/static/img/background.jpg') no-repeat center center fixed;
-      background-size: cover;
-      font-size: 16px;
-      font-family: 'Cairo', Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    .payment-container {
-      max-width: 800px;
-      width: 90%;
-      margin: 30px auto;
-      padding: 25px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      background: #fff;
-      animation: fadeIn 1s ease-in;
-    }
-    h2, h3, h4, h5 {
-      font-family: 'Cairo', sans-serif;
-      font-weight: 700;
-    }
-    .payment-options {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-    .payment-options button {
-      width: 100%;
-      padding: 15px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 18px;
-      font-family: 'Cairo', sans-serif;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      opacity: 0;
-      animation: slideIn 0.8s forwards;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
-    .pay-on-delivery {
-      background: #28a745;
-      color: white;
-    }
-    .pay-with-visa {
-      background: #007bff;
-      color: white;
-    }
-    .payment-form {
-      display: none;
-      margin-top: 25px;
-      animation: fadeInUp 0.8s ease forwards;
-    }
-    .payment-form h3 {
-      color: #333;
-      margin-bottom: 20px;
-      font-weight: 700;
-      border-bottom: 2px solid #eee;
-      padding-bottom: 10px;
-    }
-    .payment-form input {
-      width: 100%;
-      padding: 14px;
-      margin-bottom: 15px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 16px;
-      font-family: 'Cairo', sans-serif;
-      transition: all 0.3s ease;
-      text-align: right;
-    }
-    .payment-form input:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 8px rgba(0,123,255,0.3);
-    }
-    .payment-form button {
-      width: 100%;
-      padding: 14px;
-      background: #dc3545;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 18px;
-      font-family: 'Cairo', sans-serif;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      margin-top: 10px;
-    }
-    .payment-form button:hover {
-      background: #c82333;
-      transform: translateY(-2px);
-    }
-    .optional-field {
-      position: relative;
-    }
-    .optional-field::after {
-      content: "(اختياري)";
-      position: absolute;
-      left: 15px;
-      top: 14px;
-      color: #6c757d;
-      font-size: 13px;
-      font-family: 'Cairo', sans-serif;
-    }
-    .loading {
-      display: none;
-      text-align: center;
-      margin-top: 25px;
-      font-size: 18px;
-      color: #555;
-      font-family: 'Cairo', sans-serif;
-    }
-    .modal.fade .modal-dialog {
-      transform: translateY(-50px);
-      transition: transform 0.3s ease-out;
-    }
-    .modal.show .modal-dialog {
-      transform: translateY(0);
-    }
-    .modal-content {
-      animation: fadeIn 0.5s ease;
-      font-family: 'Cairo', sans-serif;
-    }
-    .modal-header {
-      border-bottom: 1px solid #eee;
-    }
-    .modal-title {
-      font-weight: 700;
-    }
-    .form-label {
-      font-weight: 600;
-      margin-bottom: 8px;
-      display: block;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-20px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @media (max-width: 600px) {
-      .payment-container {
-        width: 95%;
-        padding: 15px;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم الشاملة</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+      :root {
+          --primary-color: #3498db;
+          --secondary-color: #2ecc71;
+          --danger-color: #e74c3c;
+          --warning-color: #f39c12;
+          --dark-color: #34495e;
+          --light-color: #ecf0f1;
       }
-      .payment-options button {
-        font-size: 16px;
-        padding: 12px;
+      
+      body {
+          font-family: 'Arial', sans-serif;
+          background-color: #f5f7fa;
+          margin: 0;
+          padding: 0;
+          color: #333;
       }
-      .payment-form input {
-        font-size: 14px;
-        padding: 12px;
+      
+      .container {
+          display: grid;
+          grid-template-columns: 250px 1fr;
+          min-height: 100vh;
       }
-      .payment-form button {
-        font-size: 16px;
-        padding: 12px;
+      
+      /* الشريط الجانبي */
+      .sidebar {
+          background-color: var(--dark-color);
+          color: white;
+          padding: 20px 0;
       }
-      .optional-field::after {
-        font-size: 11px;
-        top: 12px;
-        left: 10px;
+      
+      .sidebar-header {
+          text-align: center;
+          padding: 0 20px 20px;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
       }
-    }
+      
+      .sidebar-menu {
+          padding: 20px 0;
+      }
+      
+      .menu-item {
+          padding: 12px 20px;
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          transition: all 0.3s;
+      }
+      
+      .menu-item:hover {
+          background-color: rgba(255,255,255,0.1);
+      }
+      
+      .menu-item i {
+          margin-left: 10px;
+      }
+      
+      .menu-item.active {
+          background-color: var(--primary-color);
+      }
+      
+      /* المحتوى الرئيسي */
+      .main-content {
+          padding: 20px;
+      }
+      
+      .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 30px;
+          background-color: white;
+          padding: 15px 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      }
+      
+      .page-title {
+          font-size: 24px;
+          font-weight: bold;
+          color: var(--dark-color);
+      }
+      
+      .user-info {
+          display: flex;
+          align-items: center;
+      }
+      
+      .user-info img {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          margin-left: 10px;
+      }
+      
+      /* بطاقات الإحصائيات */
+      .stats-cards {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          gap: 20px;
+          margin-bottom: 30px;
+      }
+      
+      .stat-card {
+          background-color: white;
+          border-radius: 8px;
+          padding: 20px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+          position: relative;
+          overflow: hidden;
+      }
+      
+      .stat-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 4px;
+          height: 100%;
+      }
+      
+      .stat-card.primary::before {
+          background-color: var(--primary-color);
+      }
+      
+      .stat-card.success::before {
+          background-color: var(--secondary-color);
+      }
+      
+      .stat-card.warning::before {
+          background-color: var(--warning-color);
+      }
+      
+      .stat-card.danger::before {
+          background-color: var(--danger-color);
+      }
+      
+      .stat-card .stat-title {
+          font-size: 14px;
+          color: #777;
+          margin-bottom: 10px;
+      }
+      
+      .stat-card .stat-value {
+          font-size: 24px;
+          font-weight: bold;
+          margin-bottom: 5px;
+      }
+      
+      .stat-card .stat-change {
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+      }
+      
+      .stat-card .stat-change.positive {
+          color: var(--secondary-color);
+      }
+      
+      .stat-card .stat-change.negative {
+          color: var(--danger-color);
+      }
+      
+      /* المخططات والجداول */
+      .charts-section {
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          gap: 20px;
+          margin-bottom: 30px;
+      }
+      
+      .chart-container, .table-container {
+          background-color: white;
+          border-radius: 8px;
+          padding: 20px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      }
+      
+      .chart-container {
+          min-height: 400px;
+      }
+      
+      .section-title {
+          font-size: 18px;
+          font-weight: bold;
+          margin-bottom: 20px;
+          color: var(--dark-color);
+          display: flex;
+          align-items: center;
+      }
+      
+      .section-title i {
+          margin-left: 10px;
+      }
+      
+      table {
+          width: 100%;
+          border-collapse: collapse;
+      }
+      
+      table th, table td {
+          padding: 12px 15px;
+          text-align: right;
+          border-bottom: 1px solid #eee;
+      }
+      
+      table th {
+          background-color: #f8f9fa;
+          font-weight: bold;
+      }
+      
+      table tr:hover {
+          background-color: #f8f9fa;
+      }
+      
+      .badge {
+          padding: 5px 10px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: bold;
+      }
+      
+      .badge-primary {
+          background-color: #d1e7ff;
+          color: var(--primary-color);
+      }
+      
+      .badge-success {
+          background-color: #d1fae5;
+          color: var(--secondary-color);
+      }
+      
+      .badge-warning {
+          background-color: #fef3c7;
+          color: var(--warning-color);
+      }
+      
+      .badge-danger {
+          background-color: #fee2e2;
+          color: var(--danger-color);
+      }
+      
+      /* القوائم المنسدلة */
+      .dropdown {
+          position: relative;
+          display: inline-block;
+      }
+      
+      .dropdown-content {
+          display: none;
+          position: absolute;
+          background-color: white;
+          min-width: 160px;
+          box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+          z-index: 1;
+          border-radius: 8px;
+          overflow: hidden;
+      }
+      
+      .dropdown:hover .dropdown-content {
+          display: block;
+      }
+      
+      .dropdown-item {
+          padding: 10px 15px;
+          cursor: pointer;
+          transition: background-color 0.3s;
+      }
+      
+      .dropdown-item:hover {
+          background-color: #f8f9fa;
+      }
+      
+      /* تفاصيل المنتج */
+      .product-details {
+          background-color: white;
+          border-radius: 8px;
+          padding: 20px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+          margin-bottom: 30px;
+      }
+      
+      .product-header {
+          display: flex;
+          align-items: center;
+          margin-bottom: 20px;
+      }
+      
+      .product-image {
+          width: 100px;
+          height: 100px;
+          border-radius: 8px;
+          object-fit: cover;
+          margin-left: 20px;
+      }
+      
+      .product-info h3 {
+          margin: 0 0 5px 0;
+          font-size: 20px;
+      }
+      
+      .product-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 15px;
+          margin-top: 10px;
+      }
+      
+      .product-meta-item {
+          display: flex;
+          align-items: center;
+          font-size: 14px;
+          color: #666;
+      }
+      
+      .product-meta-item i {
+          margin-left: 5px;
+          color: var(--primary-color);
+      }
+      
+      /* التبويبات */
+      .tabs {
+          display: flex;
+          border-bottom: 1px solid #eee;
+          margin-bottom: 20px;
+      }
+      
+      .tab {
+          padding: 10px 20px;
+          cursor: pointer;
+          border-bottom: 3px solid transparent;
+          transition: all 0.3s;
+      }
+      
+      .tab.active {
+          border-bottom-color: var(--primary-color);
+          color: var(--primary-color);
+          font-weight: bold;
+      }
+      
+      .tab-content {
+          display: none;
+      }
+      
+      .tab-content.active {
+          display: block;
+      }
+      
+      /* رسومات متحركة */
+      @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
+      
+      .animated {
+          animation: fadeIn 0.5s ease-out;
+      }
+      
+      /* التكيف مع الشاشات الصغيرة */
+      @media (max-width: 992px) {
+          .container {
+              grid-template-columns: 1fr;
+          }
+          
+          .sidebar {
+              display: none;
+          }
+          
+          .charts-section {
+              grid-template-columns: 1fr;
+          }
+          :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --dark-color: #34495e;
+            --light-color: #ecf0f1;
+        }
+      }
   </style>
 </head>
 <body>
-    <div class="payment-container">
-        <h2 class="text-center mb-4">إتمام عملية الشراء</h2>
-        <div class="payment-options">
-          <button class="pay-on-delivery" onclick="showDeliveryForm()">
-            <i class="fas fa-money-bill-wave"></i> الدفع عند الاستلام
-          </button>
-          <button class="pay-with-visa" onclick="showVisaForm()">
-            <i class="fas fa-credit-card"></i> الدفع باستخدام فيزا
-          </button>
-        </div>
-    
-        <div id="delivery-form" class="payment-form">
-          <h3><i class="fas fa-truck"></i> الدفع عند الاستلام</h3>
-          <div class="form-group">
-            <label for="name" class="form-label">الاسم الكامل</label>
-            <input type="text" id="name" class="form-control" placeholder="أدخل الاسم الكامل" required>
-          </div>
-          <div class="form-group">
-            <label for="phone" class="form-label">رقم الهاتف الأساسي</label>
-            <input type="tel" id="phone" class="form-control" placeholder="أدخل رقم الهاتف الأساسي" required>
-          </div>
-          <div class="form-group">
-            <label for="alt-phone" class="form-label">رقم الهاتف الثاني</label>
-            <input type="tel" id="alt-phone" class="form-control" placeholder="أدخل رقم هاتف احتياطي" required>
-          </div>
-          <div class="form-group optional-field">
-            <label for="email" class="form-label">البريد الإلكتروني</label>
-            <input type="email" id="email" class="form-control" placeholder="أدخل البريد الإلكتروني (اختياري)">
-          </div>
-          <div class="form-group">
-            <label for="address" class="form-label">العنوان</label>
-            <input type="text" id="address" class="form-control" placeholder="أدخل العنوان بالتفصيل" required>
-          </div>
-          <button class="btn-confirm" onclick="showConfirmation('delivery')">
-            <i class="fas fa-check-circle"></i> تأكيد الطلب
-          </button>
-        </div>
-    
-        <div id="visa-form" class="payment-form">
-          <h3><i class="fas fa-credit-card"></i> الدفع باستخدام فيزا</h3>
-          <div class="form-group">
-            <label for="card-name" class="form-label">اسم صاحب البطاقة</label>
-            <input type="text" id="card-name" class="form-control" placeholder="الاسم كما هو مدون على البطاقة" required>
-          </div>
-          <div class="form-group">
-            <label for="card-number" class="form-label">رقم البطاقة</label>
-            <input type="number" id="card-number" class="form-control" placeholder="أدخل 16 رقم من البطاقة" required>
-          </div>
-          <div class="form-group">
-            <label for="card-expiry" class="form-label">تاريخ الانتهاء</label>
-            <input type="text" id="card-expiry" class="form-control" placeholder="MM/YY" required>
-          </div>
-          <div class="form-group">
-            <label for="card-cvv" class="form-label">رمز الحماية (CVV)</label>
-            <input type="number" id="card-cvv" class="form-control" placeholder="أدخل الرمز المكون من 3 أرقام" required>
-          </div>
-          <button class="btn-confirm" onclick="showConfirmation('visa')">
-            <i class="fas fa-check-circle"></i> تأكيد الطلب
-          </button>
-        </div>
-    
-        <div class="loading" id="loading">
-          <div class="spinner-border text-primary" role="status">
-            <span class="sr-only">جاري التحميل...</span>
-          </div>
-          <p class="mt-3">جاري معالجة طلبك، الرجاء الانتظار...</p>
-        </div>
-      </div>
-    
-      <!-- نافذة التأكيد المنبثقة -->
-      <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="confirmationModalLabel">
-                <i class="fas fa-check-circle text-success"></i> تأكيد المعلومات
-              </h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">×</span>
-              </button>
+    <div class="container">
+        <!-- الشريط الجانبي -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>لوحة التحكم</h2>
+                <p>نظام إدارة المتجر</p>
             </div>
-            <div class="modal-body" id="confirmationDetails">
-              <!-- سيتم ملء التفاصيل هنا ديناميكيًا -->
+            <div class="sidebar-menu">
+                <div class="menu-item active" data-page="dashboard"><i class="fas fa-tachometer-alt"></i><span>الرئيسية</span></div>
+                <div class="menu-item" data-page="products"><i class="fas fa-box"></i><span>المنتجات</span></div>
+                <div class="menu-item" data-page="customers"><i class="fas fa-users"></i><span>العملاء</span></div>
+                <div class="menu-item" data-page="orders"><i class="fas fa-shopping-cart"></i><span>الطلبات</span></div>
+                <div class="menu-item" data-page="reports"><i class="fas fa-chart-line"></i><span>التقارير</span></div>
+                <div class="menu-item" data-page="settings"><i class="fas fa-cog"></i><span>الإعدادات</span></div>
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                <i class="fas fa-times"></i> إلغاء
-              </button>
-              <button type="button" class="btn btn-primary" id="confirmOrderBtn">
-                <i class="fas fa-check"></i> موافق
-              </button>
-            </div>
-          </div>
         </div>
-      </div>
-  <!-- نفس HTML السابق بدون تغيير -->
-  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById("delivery-form").style.display = "none";
-      document.getElementById("visa-form").style.display = "none";
-      if (!localStorage.getItem("cart")) {
-        localStorage.setItem("cart", JSON.stringify([]));
-      }
-    });
 
-    let orderData = {};
+        <!-- المحتوى الرئيسي -->
+        <div class="main-content">
+            <div class="header">
+                <div class="page-title">لوحة تحليل المنتجات والعملاء</div>
+                <div class="user-info">
+                    <div class="dropdown">
+                        <span>مرحباً، أحمد <i class="fas fa-chevron-down"></i></span>
+                        <div class="dropdown-content">
+                            <div class="dropdown-item"><i class="fas fa-user"></i> الملف الشخصي</div>
+                            <div class="dropdown-item"><i class="fas fa-cog"></i> الإعدادات</div>
+                            <div class="dropdown-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</div>
+                        </div>
+                    </div>
+                    <img src="https://via.placeholder.com/40" alt="صورة المستخدم">
+                </div>
+            </div>
 
-    function showDeliveryForm() {
-      document.getElementById("delivery-form").style.display = "block";
-      document.getElementById("visa-form").style.display = "none";
-      document.getElementById("delivery-form").scrollIntoView({ behavior: 'smooth' });
-    }
+            <!-- اختيار المنتج -->
+            <div class="product-selector" style="margin-bottom: 20px;">
+                <label for="productSelect">اختر منتجًا للتحليل:</label>
+                <select id="productSelect" class="form-control" style="width: 300px; padding: 5px;">
+                    <option value="">-- جميع المنتجات --</option>
+                </select>
+            </div>
 
-    function showVisaForm() {
-      document.getElementById("visa-form").style.display = "block";
-      document.getElementById("delivery-form").style.display = "none";
-      document.getElementById("visa-form").scrollIntoView({ behavior: 'smooth' });
-    }
+            <!-- بطاقات الإحصائيات -->
+            <div class="stats-cards">
+                <div class="stat-card primary animated">
+                    <div class="stat-title">إجمالي المبيعات</div>
+                    <div class="stat-value" id="totalSales">0 ر.س</div>
+                    <div class="stat-change" id="salesChange"></div>
+                </div>
+                <div class="stat-card success animated">
+                    <div class="stat-title">إجمالي العملاء</div>
+                    <div class="stat-value" id="totalCustomers">0</div>
+                    <div class="stat-change" id="customersChange"></div>
+                </div>
+                <div class="stat-card warning animated">
+                    <div class="stat-title">إجمالي المنتجات</div>
+                    <div class="stat-value" id="totalProducts">0</div>
+                    <div class="stat-change" id="productsChange"></div>
+                </div>
+                <div class="stat-card danger animated">
+                    <div class="stat-title">الطلبات الملغاة</div>
+                    <div class="stat-value" id="canceledOrders">0</div>
+                    <div class="stat-change" id="canceledChange"></div>
+                </div>
+            </div>
 
-    function showConfirmation(paymentMethod) {
-      orderData = {
-        paymentMethod: paymentMethod,
-        items: JSON.parse(localStorage.getItem("cart") || "[]"),
-        date: new Date().toISOString()
-      };
+            <!-- تفاصيل المنتج -->
+            <div class="product-details animated">
+                <div class="product-header">
+                    <img src="https://via.placeholder.com/100" alt="صورة المنتج" class="product-image" id="productImage">
+                    <div class="product-info">
+                        <h3 id="productName">جاري التحميل...</h3>
+                        <p id="productDescription">جاري التحميل...</p>
+                        <div class="product-meta">
+                            <div class="product-meta-item"><i class="fas fa-tag"></i><span id="productCategory">غير محدد</span></div>
+                            <div class="product-meta-item"><i class="fas fa-barcode"></i><span id="productId">غير محدد</span></div>
+                            <div class="product-meta-item"><i class="fas fa-star"></i><span id="productRating">0 (0 تقييم)</span></div>
+                            <div class="product-meta-item"><i class="fas fa-shopping-cart"></i><span id="productSales">تم بيعه 0 مرة</span></div>
+                        </div>
+                    </div>
+                </div>
 
-      let details = "";
-      if (paymentMethod === "delivery") {
-        const name = document.getElementById("name").value.trim();
-        const phone = document.getElementById("phone").value.trim();
-        const altPhone = document.getElementById("alt-phone").value.trim();
-        const email = document.getElementById("email").value.trim();
-        const address = document.getElementById("address").value.trim();
+                <div class="tabs">
+                    <div class="tab active" data-tab="overview">نظرة عامة</div>
+                    <div class="tab" data-tab="sales">المبيعات</div>
+                    <div class="tab" data-tab="customers">العملاء</div>
+                    <div class="tab" data-tab="inventory">المخزون</div>
+                </div>
 
-        if (!name || !phone || !altPhone || !address) {
-          showError("❌ الرجاء ملء الحقول المطلوبة (الاسم، الهاتف الأساسي، الهاتف الثاني، العنوان).");
-          return;
+                <div class="tab-content active" id="overview">
+                    <div class="charts-section">
+                        <div class="chart-container">
+                            <div class="section-title"><i class="fas fa-chart-bar"></i><span>أداء المنتج خلال السنة</span></div>
+                            <canvas id="productYearlyChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <div class="section-title"><i class="fas fa-chart-pie"></i><span>توزيع العملاء حسب العمر</span></div>
+                            <canvas id="customerAgeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="sales">
+                    <div class="charts-section">
+                        <div class="chart-container">
+                            <div class="section-title"><i class="fas fa-chart-line"></i><span>مبيعات المنتج الشهرية</span></div>
+                            <canvas id="productMonthlyChart"></canvas>
+                        </div>
+                        <div class="table-container">
+                            <div class="section-title"><i class="fas fa-table"></i><span>أعلى 5 عملاء شراءً</span></div>
+                            <table id="topCustomersTable">
+                                <thead>
+                                    <tr><th>اسم العميل</th><th>عدد الشراء</th><th>إجمالي المشتريات</th><th>آخر شراء</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="customers">
+                    <div class="charts-section">
+                        <div class="chart-container">
+                            <div class="section-title"><i class="fas fa-map-marked-alt"></i><span>توزيع العملاء جغرافياً</span></div>
+                            <div id="customerMapChart" style="height: 370px;"></div>
+                        </div>
+                        <div class="table-container">
+                            <div class="section-title"><i class="fas fa-users"></i><span>أحدث العملاء</span></div>
+                            <table id="latestCustomersTable">
+                                <thead>
+                                    <tr><th>اسم العميل</th><th>البريد الإلكتروني</th><th>تاريخ التسجيل</th><th>عدد المشتريات</th><th>الحالة</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="inventory">
+                    <div class="charts-section">
+                        <div class="chart-container">
+                            <div class="section-title"><i class="fas fa-warehouse"></i><span>مستويات المخزون</span></div>
+                            <canvas id="inventoryChart"></canvas>
+                        </div>
+                        <div class="table-container">
+                            <div class="section-title"><i class="fas fa-exchange-alt"></i><span>آخر حركات المخزون</span></div>
+                            <table id="inventoryMovementsTable">
+                                <thead>
+                                    <tr><th>التاريخ</th><th>الحركة</th><th>الكمية</th><th>المخزون الحالي</th><th>بواسطة</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-section animated">
+                <div class="chart-container">
+                    <div class="section-title"><i class="fas fa-chart-bar"></i><span>أعلى 10 منتجات مبيعاً</span></div>
+                    <canvas id="topProductsChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="section-title"><i class="fas fa-chart-line"></i><span>مقارنة مبيعات الفئات</span></div>
+                    <canvas id="categoriesChart"></canvas>
+                </div>
+            </div>
+
+            <div class="table-container animated">
+                <div class="section-title"><i class="fas fa-exclamation-circle"></i><span>المنتجات التي تحتاج انتباه</span></div>
+                <table id="attentionProductsTable">
+                    <thead>
+                        <tr><th>رقم المنتج</th><th>اسم المنتج</th><th>المخزون</th><th>آخر بيع</th><th>الحالة</th><th>إجراءات</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = window.location.origin;
+        let currentProductId = new URLSearchParams(window.location.search).get('id');
+        let productsData = [];
+        let ordersData = [];
+        let customersData = [];
+
+        // التحقق من تسجيل الدخول
+        async function checkAuth() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/check_auth`, { credentials: 'include' });
+                if (!response.ok) throw new Error('غير مسجل');
+                const data = await response.json();
+                if (!data.authenticated || data.role !== 'admin') {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('خطأ في التحقق من المصادقة:', error);
+                window.location.href = '/login.html';
+            }
         }
-        if (!/^[0-9]{10,15}$/.test(phone) || !/^[0-9]{10,15}$/.test(altPhone)) {
-          showError("❌ رقم الهاتف يجب أن يتكون من أرقام فقط (10-15 رقم)");
-          return;
-        }
-        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          showError("❌ البريد الإلكتروني غير صحيح");
-          return;
-        }
 
-        orderData.customerDetails = { name, phone, altPhone, address };
-        if (email) orderData.customerDetails.email = email;
-
-        details = `
-          <div class="confirmation-details">
-            <div class="detail-item"><span class="detail-label"><i class="fas fa-user"></i> الاسم:</span><span class="detail-value">${name}</span></div>
-            <div class="detail-item"><span class="detail-label"><i class="fas fa-phone"></i> الهاتف الأساسي:</span><span class="detail-value">${phone}</span></div>
-            <div class="detail-item"><span class="detail-label"><i class="fas fa-phone-alt"></i> الهاتف الثاني:</span><span class="detail-value">${altPhone}</span></div>
-            ${email ? `<div class="detail-item"><span class="detail-label"><i class="fas fa-envelope"></i> البريد الإلكتروني:</span><span class="detail-value">${email}</span></div>` : ''}
-            <div class="detail-item"><span class="detail-label"><i class="fas fa-map-marker-alt"></i> العنوان:</span><span class="detail-value">${address}</span></div>
-            <hr>
-            <div class="detail-item"><span class="detail-label"><i class="fas fa-money-bill-wave"></i> طريقة الدفع:</span><span class="detail-value">الدفع عند الاستلام</span></div>
-            <div class="detail-item"><span class="detail-label"><i class="fas fa-shopping-cart"></i> عدد المنتجات:</span><span class="detail-value">${orderData.items.length}</span></div>
-          </div>
-        `;
-      } else if (paymentMethod === "visa") {
-        const cardName = document.getElementById("card-name").value.trim();
-        const cardNumber = document.getElementById("card-number").value.trim();
-        const cardExpiry = document.getElementById("card-expiry").value.trim();
-        const cardCVV = document.getElementById("card-cvv").value.trim();
-
-        if (!cardName || !cardNumber || !cardExpiry || !cardCVV) {
-          showError("❌ الرجاء ملء جميع بيانات البطاقة.");
-          return;
-        }
-        if (!/^[0-9]{16}$/.test(cardNumber)) {
-          showError("❌ رقم البطاقة يجب أن يتكون من 16 رقم");
-          return;
-        }
-        if (!/^(0[1-9]|1[0-2])\/?([0-9]{2})$/.test(cardExpiry)) {
-          showError("❌ تاريخ الانتهاء غير صحيح (استخدم الصيغة MM/YY)");
-          return;
-        }
-        if (!/^[0-9]{3,4}$/.test(cardCVV)) {
-          showError("❌ رمز الحماية (CVV) يجب أن يتكون من 3 أو 4 أرقام");
-          return;
+        // جلب بيانات المنتجات
+        async function fetchProductsData() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/products`, { credentials: 'include' });
+                if (!response.ok) throw new Error('خطأ في جلب المنتجات');
+                productsData = await response.json();
+                populateProductSelect(productsData);
+                return productsData;
+            } catch (error) {
+                console.error('خطأ في جلب بيانات المنتجات:', error);
+                return [];
+            }
         }
 
-        orderData.paymentDetails = { cardName, cardNumber, cardExpiry, cardCVV };
-
-        details = `
-          <div class="confirmation-details">
-            <div class="detail-item"><span class="detail-label"><i class="fas fa-credit-card"></i> نوع البطاقة:</span><span class="detail-value">فيزا</span></div>
-            <div class="detail-item"><span class="detail-label"><i class="fas fa-user"></i> اسم صاحب البطاقة:</span><span class="detail-value">${cardName}</span></div>
-            <div class="detail-item"><span class="detail-label"><i class="fas fa-hashtag"></i> رقم البطاقة:</span><span class="detail-value">**** **** **** ${cardNumber.slice(-4)}</span></div>
-            <div class="detail-item"><span class="detail-label"><i class="fas fa-calendar-alt"></i> تاريخ الانتهاء:</span><span class="detail-value">${cardExpiry}</span></div>
-            <hr>
-            <div class="detail-item"><span class="detail-label"><i class="fas fa-shopping-cart"></i> عدد المنتجات:</span><span class="detail-value">${orderData.items.length}</span></div>
-            <div class="alert alert-warning mt-3"><i class="fas fa-exclamation-triangle"></i> سيتم خصم المبلغ من بطاقتك عند تأكيد الطلب</div>
-          </div>
-        `;
-      }
-
-      document.getElementById("confirmationDetails").innerHTML = details;
-      $('#confirmationModal').modal('show');
-
-      document.getElementById("confirmOrderBtn").onclick = function() {
-        $('#confirmationModal').modal('hide');
-        confirmOrder();
-      };
-    }
-
-    function showError(message) {
-      alert(message);
-    }
-
-    async function confirmOrder() {
-      const loading = document.getElementById("loading");
-      loading.style.display = "block";
-
-      try {
-        const response = await fetch("/api/place_order", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(orderData),
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || "فشل في تقديم الطلب.");
+        // جلب بيانات الطلبات
+        async function fetchOrdersData() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/orders`, { credentials: 'include' });
+                if (!response.ok) throw new Error('خطأ في جلب الطلبات');
+                ordersData = await response.json();
+                return ordersData;
+            } catch (error) {
+                console.error('خطأ في جلب بيانات الطلبات:', error);
+                return [];
+            }
         }
-        localStorage.removeItem("cart");
-        window.location.href = `/order_confirmation/${data.orderId}`; // تعديل المسار ليتناسب مع Flask
-      } catch (error) {
-        console.error("❌ خطأ:", error);
-        alert(error.message || "❌ فشل في تقديم الطلب. الرجاء المحاولة مرة أخرى.");
-      } finally {
-        loading.style.display = "none";
-      }
-    }
-  </script>
+
+        // جلب بيانات العملاء
+        async function fetchCustomersData() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/customers`, { credentials: 'include' });
+                if (!response.ok) throw new Error('خطأ في جلب العملاء');
+                customersData = await response.json();
+                return customersData;
+            } catch (error) {
+                console.error('خطأ في جلب بيانات العملاء:', error);
+                return [];
+            }
+        }
+
+        // ملء قائمة اختيار المنتجات
+        function populateProductSelect(products) {
+            const select = document.getElementById('productSelect');
+            products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = product.name;
+                select.appendChild(option);
+            });
+            if (currentProductId) select.value = currentProductId;
+            select.addEventListener('change', () => {
+                currentProductId = select.value;
+                updateDashboard();
+            });
+        }
+
+        // حساب مبيعات المنتج
+        function calculateProductSales(productId) {
+            let totalSales = 0;
+            ordersData.forEach(order => {
+                order.items.forEach(item => {
+                    if (item.id === productId) {
+                        totalSales += item.quantity || 0;
+                    }
+                });
+            });
+            return totalSales;
+        }
+
+        // تحديث الإحصائيات العامة
+        function updateStats() {
+            const totalSales = ordersData.reduce((sum, order) => sum + (order.total || 0), 0);
+            document.getElementById('totalSales').textContent = `${totalSales.toFixed(2)} ر.س`;
+            document.getElementById('totalCustomers').textContent = customersData.length;
+            document.getElementById('totalProducts').textContent = productsData.length;
+            const canceledOrders = ordersData.filter(o => o.status === 'canceled').length;
+            document.getElementById('canceledOrders').textContent = canceledOrders;
+        }
+
+        // تحديث تفاصيل المنتج
+        function updateProductDetails(product) {
+            if (product) {
+                document.getElementById('productImage').src = product.image || 'https://via.placeholder.com/100';
+                document.getElementById('productName').textContent = product.name || 'غير محدد';
+                document.getElementById('productDescription').textContent = product.description || 'لا يوجد وصف';
+                document.getElementById('productCategory').textContent = product.category || 'غير محدد';
+                document.getElementById('productId').textContent = product.id;
+                document.getElementById('productRating').textContent = `${product.average_rating || 0} (${product.ratings ? product.ratings.length : 0} تقييم)`;
+                const totalSales = calculateProductSales(product.id);
+                document.getElementById('productSales').textContent = `تم بيعه ${totalSales} مرة`;
+            } else {
+                document.getElementById('productImage').src = 'https://via.placeholder.com/100';
+                document.getElementById('productName').textContent = 'جميع المنتجات';
+                document.getElementById('productDescription').textContent = 'إحصائيات شاملة لجميع المنتجات';
+                document.getElementById('productCategory').textContent = 'جميع الفئات';
+                document.getElementById('productId').textContent = 'غير محدد';
+                document.getElementById('productRating').textContent = 'غير متاح';
+                const totalSales = ordersData.reduce((sum, order) => sum + order.items.reduce((s, i) => s + (i.quantity || 0), 0), 0);
+                document.getElementById('productSales').textContent = `تم بيعه ${totalSales} مرة`;
+            }
+        }
+
+        // تهيئة المخططات والجداول
+        function initChartsAndTables() {
+            const product = currentProductId ? productsData.find(p => p.id === currentProductId) : null;
+
+            // أداء المنتج خلال السنة
+            const yearlySales = Array(12).fill(0);
+            ordersData.forEach(order => {
+                order.items.forEach(item => {
+                    if (!product || item.id === product.id) {
+                        const date = new Date(order.date);
+                        const month = date.getMonth();
+                        yearlySales[month] += item.quantity || 0;
+                    }
+                });
+            });
+            const yearlyCtx = document.getElementById('productYearlyChart').getContext('2d');
+            new Chart(yearlyCtx, {
+                type: 'line',
+                data: {
+                    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+                    datasets: [{
+                        label: product ? 'مبيعات المنتج' : 'إجمالي المبيعات',
+                        data: yearlySales,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // مبيعات المنتج الشهرية
+            const monthlySales = Array(4).fill(0);
+            const currentMonth = new Date().getMonth();
+            ordersData.forEach(order => {
+                order.items.forEach(item => {
+                    if (!product || item.id === product.id) {
+                        const date = new Date(order.date);
+                        if (date.getMonth() === currentMonth) {
+                            const week = Math.floor(date.getDate() / 7);
+                            monthlySales[week] += item.quantity || 0;
+                        }
+                    }
+                });
+            });
+            const monthlyCtx = document.getElementById('productMonthlyChart').getContext('2d');
+            new Chart(monthlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['الأسبوع 1', 'الأسبوع 2', 'الأسبوع 3', 'الأسبوع 4'],
+                    datasets: [{
+                        label: 'مبيعات الشهر الحالي',
+                        data: monthlySales,
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // أعلى 10 منتجات مبيعاً
+            const topProducts = productsData.map(p => ({
+                name: p.name,
+                sales: calculateProductSales(p.id)
+            })).sort((a, b) => b.sales - a.sales).slice(0, 10);
+            const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
+            new Chart(topProductsCtx, {
+                type: 'bar',
+                data: {
+                    labels: topProducts.map(p => p.name),
+                    datasets: [{
+                        label: 'عدد المبيعات',
+                        data: topProducts.map(p => p.sales),
+                        backgroundColor: ['#3498db', '#2ecc71', '#9b59b6', '#f1c40f', '#e67e22', '#e74c3c', '#34495e', '#95a5a6', '#16a085', '#f39c12']
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true } }
+                }
+            });
+
+            // مقارنة مبيعات الفئات
+            const categoriesSales = {};
+            productsData.forEach(p => {
+                const sales = calculateProductSales(p.id);
+                categoriesSales[p.category] = (categoriesSales[p.category] || 0) + sales;
+            });
+            const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
+            new Chart(categoriesCtx, {
+                type: 'radar',
+                data: {
+                    labels: Object.keys(categoriesSales),
+                    datasets: [{
+                        label: 'مبيعات الفئات',
+                        data: Object.values(categoriesSales),
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        borderColor: '#3498db',
+                        pointBackgroundColor: '#3498db'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { r: { angleLines: { display: true }, suggestedMin: 0 } }
+                }
+            });
+
+            // مستويات المخزون
+            const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
+            new Chart(inventoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['المخزون الحالي', 'حد إعادة الطلب', 'المخزون الأمثل'],
+                    datasets: [{
+                        label: 'كمية المخزون',
+                        data: product ? [product.amount || 0, 10, 30] : [productsData.reduce((sum, p) => sum + (p.amount || 0), 0), 0, 0],
+                        backgroundColor: ['#3498db', '#f1c40f', '#2ecc71']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // المنتجات التي تحتاج انتباه (المخزون أقل من 3)
+            const attentionProducts = productsData.filter(p => (p.amount || 0) < 3);
+            const attentionTableBody = document.getElementById('attentionProductsTable').querySelector('tbody');
+            attentionTableBody.innerHTML = '';
+            attentionProducts.forEach(p => {
+                const lastSale = ordersData.filter(o => o.items.some(i => i.id === p.id)).sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.date || 'غير متاح';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${p.id}</td>
+                    <td>${p.name}</td>
+                    <td>${p.amount || 0}</td>
+                    <td>${lastSale}</td>
+                    <td><span class="badge badge-warning">مخزون منخفض</span></td>
+                    <td><button class="btn btn-sm btn-primary" onclick="restock('${p.id}')">إعادة تعبئة</button></td>
+                `;
+                attentionTableBody.appendChild(row);
+            });
+        }
+
+        // إعادة تعبئة المخزون (مثال)
+        async function restock(productId) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/products/${productId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: 10 }), // على سبيل المثال
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    alert('تم إعادة تعبئة المخزون بنجاح');
+                    await fetchProductsData();
+                    updateDashboard();
+                }
+            } catch (error) {
+                console.error('خطأ في إعادة التعبئة:', error);
+            }
+        }
+
+        // تحديث لوحة التحكم
+        async function updateDashboard() {
+            const product = currentProductId ? productsData.find(p => p.id === currentProductId) : null;
+            updateProductDetails(product);
+            updateStats();
+            initChartsAndTables();
+        }
+
+        // إدارة التبويبات
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    document.getElementById(tab.dataset.tab).classList.add('active');
+                });
+            });
+        }
+
+        // تسجيل الخروج
+        async function logout() {
+            try {
+                await fetch(`${BASE_URL}/api/logout`, { method: 'POST', credentials: 'include' });
+                window.location.href = '/login.html';
+            } catch (error) {
+                console.error('خطأ في تسجيل الخروج:', error);
+            }
+        }
+
+        // تهيئة الصفحة
+        async function init() {
+            await checkAuth();
+            await fetchProductsData();
+            await fetchOrdersData();
+            await fetchCustomersData();
+            updateDashboard();
+            setupTabs();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>

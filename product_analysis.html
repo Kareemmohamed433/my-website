@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحليل المنتج</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+        h1 { text-align: center; color: #333; }
+        canvas { max-width: 600px; margin: 20px auto; }
+        p { text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>تحليل المنتج</h1>
+    <p id="productName"></p>
+    <canvas id="productChart"></canvas>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+        const BASE_URL = window.location.origin;
+
+        // التحقق من تسجيل الدخول
+        fetch(`${BASE_URL}/api/check_auth`, { credentials: 'include' })
+            .then(response => response.ok ? response.json() : Promise.reject('غير مسجل'))
+            .then(data => {
+                if (!data.authenticated || data.role !== 'admin') {
+                    window.location.href = '/login.html';
+                } else {
+                    fetchProductAnalysis();
+                }
+            })
+            .catch(() => {
+                window.location.href = '/login.html';
+            });
+
+        // جلب بيانات المنتج
+        function fetchProductAnalysis() {
+            fetch(`${BASE_URL}/api/product_analysis/${productId}`, {
+                credentials: 'include'
+            })
+            .then(response => response.ok ? response.json() : Promise.reject('خطأ في جلب البيانات'))
+            .then(product => {
+                document.getElementById('productName').textContent = `اسم المنتج: ${product.name}`;
+                
+                const ctx = document.getElementById('productChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['السعر', 'الخصم', 'المبيعات'],
+                        datasets: [{
+                            label: product.name,
+                            data: [product.price, product.discount || 0, product.total_sold || 0],
+                            backgroundColor: ['#36A2EB', '#FF6384', '#4BC0C0']
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('خطأ في جلب بيانات المنتج:', error);
+                document.getElementById('productName').textContent = 'خطأ في جلب بيانات المنتج';
+            });
+        }
+    </script>
+</body>
+</html>

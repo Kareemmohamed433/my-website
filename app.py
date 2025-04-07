@@ -17,6 +17,8 @@ import bcrypt
 from werkzeug.utils import secure_filename
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
+import cloudinary  # تأكد من استيراد مكتبة Cloudinary
+import cloudinary.uploader  # لرفع الصور
 
 # Load environment variables
 load_dotenv(dotenv_path="secret.env")
@@ -86,10 +88,6 @@ def send_whatsapp_message(to_number, message):
     except TwilioRestException as e:
         logger.error(f"❌ Failed to send WhatsApp message: {e}")
         return False
-
-# # Initialize Firebase
-# cred = credentials.Certificate("C:/Users/HP/Desktop/Build-Ecommerce-Website-With-HTML-CSS-JavaScript-main/web-site-of-market-firebase-adminsdk-fbsvc-7197b01469.json")
-# firebase_admin.initialize_app(cred)
 
 # Token required decorator
 def token_required(f):
@@ -347,17 +345,75 @@ def get_users():
         if request.user.get('role') != 'admin':
             return jsonify({"error": "❌ Must be an admin to access this data"}), 403
 
+        # جلب جميع المستخدمين المسجلين
         users = list(users_collection.find({}, {'_id': 0, 'password': 0}))
-        for user in users:
-            order_count = orders_collection.count_documents({"customerDetails.email": user.get("email", "")})
-            user['orderCount'] = order_count if order_count else 0
+        user_emails = {user.get("email", "") for user in users}
 
-        logger.info(f"✅ Retrieved {len(users)} users successfully")
+        # جلب جميع الطلبات لتحديد العملاء غير المسجلين (الضيوف)
+        orders = list(orders_collection.find({}))
+        guest_users = set()
+        for order in orders:
+            email = order.get("customerDetails", {}).get("email", "Not specified")
+            if email != "Not specified" and email not in user_emails:
+                guest_users.add(email)
+
+        # إضافة العملاء غير المسجلين إلى القائمة
+        for guest_email in guest_users:
+            orders_for_guest = [o for o in orders if o.get("customerDetails", {}).get("email") == guest_email]
+            order_count = len(orders_for_guest)
+            total_items_ordered = sum(sum(item["quantity"] for item in order.get("items", [])) for order in orders_for_guest)
+            products_ordered = {}
+            for order in orders_for_guest:
+                for item in order.get("items", []):
+                    product_id = item["id"]
+                    products_ordered[product_id] = products_ordered.get(product_id, 0) + item["quantity"]
+
+            users.append({
+                "username": "Guest",
+                "email": guest_email,
+                "orderCount": order_count,
+                "totalItemsOrdered": total_items_ordered,
+                "productsOrdered": [
+                    {
+                        "productId": pid,
+                        "quantity": qty,
+                        "name": (product["name"] if (product := products_collection.find_one({"id": pid}, {"name": 1})) else "غير معروف")
+                    }
+                    for pid, qty in products_ordered.items()
+                ],
+                "role": "guest"
+            })
+
+        # معالجة بيانات المستخدمين المسجلين
+        for user in users:
+            if user.get("role") != "guest":  # لا نعيد معالجة الضيوف
+                email = user.get("email", "")
+                username = user.get("username", "")
+                orders = list(orders_collection.find({"customerDetails.email": email}))
+                order_count = len(orders)
+                total_items_ordered = sum(sum(item["quantity"] for item in order.get("items", [])) for order in orders)
+                products_ordered = {}
+                for order in orders:
+                    for item in order.get("items", []):
+                        product_id = item["id"]
+                        products_ordered[product_id] = products_ordered.get(product_id, 0) + item["quantity"]
+                
+                user['orderCount'] = order_count
+                user['totalItemsOrdered'] = total_items_ordered
+                user['productsOrdered'] = [
+                    {
+                        "productId": pid,
+                        "quantity": qty,
+                        "name": (product["name"] if (product := products_collection.find_one({"id": pid}, {"name": 1})) else "غير معروف")
+                    }
+                    for pid, qty in products_ordered.items()
+                ]
+
+        logger.info(f"✅ Retrieved {len(users)} users successfully (including guests)")
         return jsonify(users), 200
     except Exception as e:
         logger.error(f"❌ Failed to retrieve users: {e}")
         return jsonify({'error': '❌ Failed to retrieve users'}), 500
-
 # Upload image API
 @app.route("/api/upload_image", methods=["POST"])
 @token_required
@@ -462,6 +518,22 @@ def edit_product_page():
         return jsonify({"error": "❌ Access denied to admin page"}), 403
     return render_template("edit-product.html")
 
+@app.route('/dashboard.html')
+@token_required
+def dashboard_page():
+    if request.user.get('role') != 'admin':
+        logger.error(f"Access denied for user {request.user.get('username')}: Not an admin")
+        return jsonify({"error": "❌ Access denied to admin page"}), 403
+    return render_template("dashboard.html")
+
+@app.route('/product_analysis.html')
+@token_required
+def product_analysis_page():
+    if request.user.get('role') != 'admin':
+        logger.error(f"Access denied for user {request.user.get('username')}: Not an admin")
+        return jsonify({"error": "❌ Access denied to admin page"}), 403
+    return render_template("product_analysis.html")
+
 @app.route('/orders.html')
 @token_required
 def orders_page():
@@ -494,6 +566,30 @@ def admin_page():
 def product_page(product_id):
     return render_template('product.html')
 
+@app.route('/api/product_analysis/<product_id>', methods=['GET'])
+@token_required
+def product_analysis(product_id):
+    try:
+        if request.user.get('role') != 'admin':
+            return jsonify({"error": "❌ Not allowed to view product analysis"}), 403
+        
+        product = products_collection.find_one({"id": product_id})
+        if not product:
+            return jsonify({"error": "❌ المنتج غير موجود"}), 404
+        
+        product["_id"] = str(product["_id"])
+        sales_data = orders_collection.aggregate([
+            {"$unwind": "$items"},
+            {"$match": {"items.id": product_id}},
+            {"$group": {"_id": "$items.id", "total_sold": {"$sum": "$items.quantity"}}}
+        ])
+        product["total_sold"] = next(sales_data, {}).get("total_sold", 0)
+        
+        return jsonify(product), 200
+    except Exception as e:
+        logger.error(f"❌ فشل في تحليل المنتج: {e}")
+        return jsonify({"error": "❌ فشل في تحليل المنتج"}), 500
+
 # Get single product API
 @app.route('/api/products/<product_id>', methods=['GET'])
 @token_required
@@ -508,7 +604,6 @@ def get_product(product_id):
         logger.error(f"❌ خطأ في جلب المنتج: {e}")
         return jsonify({"error": "❌ فشل في جلب المنتج"}), 500
 
-# Get products API
 @app.route('/api/products', methods=['GET'])
 def get_products():
     try:
@@ -518,6 +613,12 @@ def get_products():
             product = products_collection.find_one({"id": product_id})
             if product:
                 product["_id"] = str(product["_id"])
+                sales_count = orders_collection.aggregate([
+                    {"$unwind": "$items"},
+                    {"$match": {"items.id": product_id}},
+                    {"$group": {"_id": "$items.id", "total_sold": {"$sum": "$items.quantity"}}}
+                ])
+                product["total_sold"] = next(sales_count, {}).get("total_sold", 0)
                 return jsonify(product), 200
             return jsonify({"error": "❌ المنتج غير موجود"}), 404
         
@@ -525,10 +626,66 @@ def get_products():
         products_list = list(products_collection.find(query))
         for product in products_list:
             product["_id"] = str(product["_id"])
+            sales_count = orders_collection.aggregate([
+                {"$unwind": "$items"},
+                {"$match": {"items.id": product["id"]}},
+                {"$group": {"_id": "$items.id", "total_sold": {"$sum": "$items.quantity"}}}
+            ])
+            product["total_sold"] = next(sales_count, {}).get("total_sold", 0)
         return jsonify(products_list if products_list else {"message": "❌ لا توجد منتجات متاحة"}), 200
     except Exception as e:
         logger.error(f"❌ فشل في جلب المنتجات: {e}")
         return jsonify({"error": "❌ فشل في جلب المنتجات"}), 500
+
+# Update product API (دمج التعريفين)
+@app.route('/api/products/<product_id>', methods=['PUT'])
+@token_required
+def update_product(product_id):
+    try:
+        if request.user['role'] != 'admin':
+            return jsonify({"error": "❌ Not allowed to update product"}), 403
+
+        update_data = {}
+        existing_product = products_collection.find_one({'id': product_id})
+        if not existing_product:
+            return jsonify({"success": False, "message": "❌ Product not found"}), 404
+
+        # التعامل مع رفع الصورة الرئيسية
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and allowed_file(file.filename):
+                upload_result = cloudinary.uploader.upload(file, folder="products")
+                update_data['image'] = upload_result["secure_url"]
+            else:
+                return jsonify({"success": False, "message": "❌ Invalid image file"}), 400
+
+        # التعامل مع رفع الصور الإضافية
+        if 'images' in request.files:
+            files = request.files.getlist('images')
+            new_images = existing_product.get('images', [])
+            for file in files:
+                if file and allowed_file(file.filename):
+                    upload_result = cloudinary.uploader.upload(file, folder="products")
+                    new_images.append(upload_result["secure_url"])
+            update_data['images'] = new_images
+
+        # تحديث الحقول الأخرى من النموذج
+        if request.form:
+            if 'name' in request.form: update_data['name'] = request.form['name']
+            if 'price' in request.form: update_data['price'] = float(request.form['price'])
+            if 'discount' in request.form: update_data['discount'] = float(request.form['discount'])
+            if 'amount' in request.form: update_data['amount'] = int(request.form['amount'])
+            if 'description' in request.form: update_data['description'] = request.form['description']
+
+        # تحديث البيانات في قاعدة البيانات إذا كانت هناك تغييرات
+        if update_data:
+            products_collection.update_one({'id': product_id}, {'$set': update_data})
+            return jsonify({"success": True, "message": "✅ Product updated successfully"}), 200
+        return jsonify({"success": False, "message": "❌ No changes provided"}), 400
+
+    except Exception as e:
+        logger.error(f"Error updating product: {str(e)}")
+        return jsonify({"success": False, "message": f"❌ Server error: {str(e)}"}), 500
 
 @app.route('/api/add_product', methods=['POST'])
 @token_required
@@ -537,7 +694,6 @@ def add_product():
         if request.user['role'] != 'admin':
             return jsonify({"error": "❌ غير مسموح لك بإضافة منتج"}), 403
 
-        # Create product data dictionary
         product_data = {
             "name": request.form.get("name"),
             "price": float(request.form.get("price", 0)),
@@ -550,36 +706,28 @@ def add_product():
             "images": []
         }
 
-        # Handle main image
         if 'mainImage' in request.files:
             main_image = request.files['mainImage']
             if main_image and allowed_file(main_image.filename):
-                filename = secure_filename(f"main_{product_data['id']}_{main_image.filename}")
-                filepath = os.path.join(UPLOAD_FOLDER, filename)
-                main_image.save(filepath)
-                product_data["image"] = f"/static/img/uploads/{filename}"  # Main image
-                product_data["images"].append(f"/static/img/uploads/{filename}")  # Also add to images array
+                upload_result = cloudinary.uploader.upload(main_image, folder="products")
+                product_data["image"] = upload_result["secure_url"]
+                product_data["images"].append(upload_result["secure_url"])
+            else:
+                return jsonify({"error": "❌ Invalid main image file"}), 400
 
-        # Handle additional images
         additional_images = request.files.getlist('additionalImages')
         for img in additional_images:
             if img and allowed_file(img.filename):
-                filename = secure_filename(f"additional_{product_data['id']}_{img.filename}")
-                filepath = os.path.join(UPLOAD_FOLDER, filename)
-                img.save(filepath)
-                product_data["images"].append(f"/static/img/uploads/{filename}")
+                upload_result = cloudinary.uploader.upload(img, folder="products")
+                product_data["images"].append(upload_result["secure_url"])
 
-        # Insert into database
         products_collection.insert_one(product_data)
-        
-        # Return success response with product URL
         return jsonify({
             "success": True,
             "message": "✅ تم إضافة المنتج بنجاح",
             "id": product_data["id"],
             "productUrl": f"/product/{product_data['id']}"
         }), 200
-
     except Exception as e:
         logger.error(f"❌ فشل في إضافة المنتج: {str(e)}")
         return jsonify({"error": f"❌ فشل في إضافة المنتج: {str(e)}"}), 500
@@ -590,7 +738,7 @@ def add_product():
 def delete_product():
     try:
         product_id = request.args.get('id')
-        result = products_collection.delete_one({"_id": ObjectId(product_id)})
+        result = products_collection.delete_one={"_id": ObjectId(product_id)}
         if result.deleted_count > 0:
             return jsonify({"message": "✅ تم حذف المنتج بنجاح"}), 200
         return jsonify({"error": "❌ المنتج غير موجود"}), 404
@@ -610,103 +758,9 @@ def delete_all_products():
     except Exception as e:
         logger.error(f"❌ فشل في حذف جميع المنتجات: {e}")
         return jsonify({"error": "❌ فشل في حذف جميع المنتجات"}), 500
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}  # أضف الامتدادات المسموحة
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route('/api/products/<product_id>', methods=['PUT'])
-def update_product(product_id):
-    try:
-        update_data = {}
-        existing_product = products_collection.find_one({'id': product_id})
-
-        if not existing_product:
-            return jsonify({"success": False, "message": "❌ Product not found"}), 404
-
-        if 'delete_image' in request.form and request.form['delete_image'] == 'true':
-            update_data['image'] = None
-
-        if 'delete_images' in request.form and request.form['delete_images'] == 'true':
-            update_data['images'] = []
-
-        if 'image' in request.files:
-            file = request.files['image']
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                file_path = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(file_path)
-                update_data['image'] = f"/static/img/uploads/{filename}"
-            else:
-                return jsonify({"success": False, "message": "❌ Invalid image file"}), 400
-
-        if 'images' in request.files:
-            files = request.files.getlist('images')
-            new_images = existing_product.get('images', [])
-            for file in files:
-                if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    file_path = os.path.join(UPLOAD_FOLDER, filename)
-                    file.save(file_path)
-                    new_images.append(f"/static/img/uploads/{filename}")
-                else:
-                    return jsonify({"success": False, "message": "❌ Invalid additional image file"}), 400
-            update_data['images'] = new_images
-
-        # Ensure main image is in images array
-        if 'image' in update_data and update_data['image']:
-            if 'images' not in update_data:
-                update_data['images'] = existing_product.get('images', [])
-            if update_data['image'] not in update_data['images']:
-                update_data['images'].insert(0, update_data['image'])
-
-        if request.form:
-            if 'name' in request.form and request.form['name'].strip():
-                update_data['name'] = request.form['name']
-            if 'price' in request.form:
-                try:
-                    update_data['price'] = float(request.form['price'])
-                except ValueError:
-                    return jsonify({"success": False, "message": "❌ Invalid price value"}), 400
-            if 'discount' in request.form:
-                try:
-                    update_data['discount'] = float(request.form['discount'])
-                except ValueError:
-                    return jsonify({"success": False, "message": "❌ Invalid discount value"}), 400
-            if 'amount' in request.form:
-                try:
-                    update_data['amount'] = int(request.form['amount'])
-                except ValueError:
-                    return jsonify({"success": False, "message": "❌ Invalid amount value"}), 400
-            if 'description' in request.form:
-                update_data['description'] = request.form['description']
-
-        if not update_data:
-            return jsonify({"success": False, "message": "❌ No valid data provided to update"}), 400
-
-        result = products_collection.update_one(
-            {'id': product_id},
-            {'$set': update_data}
-        )
-
-        if result.modified_count > 0:
-            return jsonify({"success": True, "message": "✅ Product updated successfully"})
-        else:
-            return jsonify({"success": False, "message": "❌ No changes detected or product already up-to-date"}), 200
-
-    except Exception as e:
-        return jsonify({"success": False, "message": f"❌ Server error: {str(e)}"}), 500
-
-# دالة لإرسال رسالة WhatsApp (افتراضية)
-def send_whatsapp_message(phone_number, message):
-    logger.info(f"Sending WhatsApp message to {phone_number}: {message}")
-    # أضف هنا الكود الفعلي لإرسال الرسالة عبر API WhatsApp
-
-def send_whatsapp_message(phone_number, message):
-    logger.info(f"محاكاة إرسال رسالة WhatsApp إلى {phone_number}: {message}")
-    # هنا يمكنك إضافة كود فعلي لـ WhatsApp API مثل Twilio
 
 @app.route('/api/place_order', methods=['POST'])
+@token_required
 def place_order():
     try:
         order_data = request.get_json()
@@ -714,19 +768,18 @@ def place_order():
         if not order_data:
             return jsonify({"error": "❌ Invalid order data"}), 400
 
-        # التحقق من البيانات الإلزامية للدفع عند الاستلام
         if order_data.get("paymentMethod") == "delivery":
             required_fields = ["name", "phone", "altPhone", "address"]
             if not all(key in order_data and order_data[key] for key in required_fields):
                 return jsonify({"error": "❌ Missing required fields (name, phone, altPhone, address)"}), 400
 
-        # تفاصيل العميل
         customer_details = {
-            "name": order_data.get("name", "Not specified"),
+            "name": order_data.get("name", request.user.get("username", "Not specified")),
             "phone": order_data.get("phone", ""),
             "altPhone": order_data.get("altPhone", ""),
-            "email": order_data.get("email", "Not specified"),
-            "address": order_data.get("address", "Not specified")
+            "email": request.user.get("email", order_data.get("email", "Not specified")),
+            "address": order_data.get("address", "Not specified"),
+            "username": request.user.get("username", "Not specified")
         }
 
         items = order_data.get("items", [])
@@ -735,8 +788,6 @@ def place_order():
 
         total = 0
         validated_items = []
-
-        # التحقق من المنتجات وحساب الإجمالي
         for item in items:
             product = products_collection.find_one({"id": item.get("id")})
             if product:
@@ -750,7 +801,7 @@ def place_order():
                     "name": product.get("name"),
                     "price": final_price,
                     "quantity": quantity,
-                    "image": product.get("image", "/static/img/default-product.jpg")
+                    "image": product.get("image", "https://res.cloudinary.com/your-cloud-name/image/upload/v1234567890/default-product.jpg")
                 })
             else:
                 logger.warning(f"❌ Product {item.get('id')} not found in database")
@@ -758,7 +809,6 @@ def place_order():
         if not validated_items:
             return jsonify({"error": "❌ No valid products in order"}), 400
 
-        # التحقق من الكمية وتحديث المخزون
         for item in validated_items:
             product = products_collection.find_one({"id": item["id"]})
             if product:
@@ -771,7 +821,6 @@ def place_order():
                     {"$set": {"amount": new_amount}}
                 )
 
-        # تنسيق الطلب
         normalized_order = {
             "customerDetails": customer_details,
             "items": validated_items,
@@ -781,18 +830,17 @@ def place_order():
             "created_at": datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
         }
 
-        # إضافة الطلب إلى قاعدة البيانات
         result = orders_collection.insert_one(normalized_order)
         order_id = str(result.inserted_id)
         cart_collection.delete_one({"user": customer_details["email"]})
         logger.info(f"✅ New order placed: {order_id}")
 
-        # إعداد رسالة WhatsApp المحدثة
         whatsapp_message = ""
         if order_data.get("paymentMethod") == "delivery":
             whatsapp_message = (
                 f"طلب جديد (الدفع عند الاستلام):\n"
                 f"الاسم: {customer_details['name']}\n"
+                f"اسم المستخدم: {customer_details['username']}\n"
                 f"رقم الهاتف الأساسي: {customer_details['phone']}\n"
                 f"رقم الهاتف الثاني: {customer_details['altPhone']}\n"
                 f"البريد الإلكتروني: {customer_details['email'] if customer_details['email'] != 'Not specified' else 'غير محدد'}\n"
@@ -803,11 +851,11 @@ def place_order():
             whatsapp_message = (
                 f"طلب جديد (فيزا):\n"
                 f"اسم صاحب البطاقة: {order_data.get('cardDetails', {}).get('cardName', 'غير محدد')}\n"
+                f"اسم المستخدم: {customer_details['username']}\n"
                 f"رقم البطاقة: {order_data.get('cardDetails', {}).get('cardNumber', 'غير محدد')[-4:].rjust(len(order_data.get('cardDetails', {}).get('cardNumber', '')), '*')}\n"
                 f"الإجمالي: {round(total, 2)}"
             )
 
-        # إرسال رسالة WhatsApp
         send_whatsapp_message("+201022957599", whatsapp_message)
 
         return jsonify({
@@ -851,6 +899,7 @@ def order_confirmation(order_id):
     except Exception as e:
         logger.error(f"خطأ في عرض تأكيد الطلب: {str(e)}")
         return render_template("order_confirmation.html", order=None, error="حدث خطأ أثناء معالجة الطلب")
+
 # Cart route
 @app.route('/cart')
 def cart():
@@ -915,13 +964,15 @@ def get_orders():
         for order in orders:
             order["_id"] = str(order["_id"])
             customer = order.get("customerDetails", {})
-            customer["name"] = customer.get("name", "Not specified")
-            customer["email"] = customer.get("email", "Not specified")
-            customer["address"] = customer.get("address", "Not specified")
-            customer["phone"] = customer.get("phone", "")
-            order["customerDetails"] = customer
-            if "cart" in order:
-                order["items"] = order.pop("cart")
+            email = customer.get("email", "Not specified")
+            user = users_collection.find_one({"email": email})
+            order["customerDetails"] = {
+                "name": customer.get("name", "Not specified"),
+                "email": email,
+                "phone": customer.get("phone", ""),
+                "address": customer.get("address", "Not specified"),
+                "username": user.get("username", "Not specified") if user else customer.get("username", "Not specified")
+            }
         logger.info(f"✅ Retrieved {len(orders)} orders successfully")
         return jsonify(orders), 200
     except Exception as e:

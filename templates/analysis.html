@@ -177,6 +177,7 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ml-auto">
+        <li class="nav-item"><a class="nav-link" href="/dashboard.html">📈 لوحة التحكم</a></li>
         <li class="nav-item"><a class="nav-link" href="/analysis.html">📊 تحليل</a></li>
         <li class="nav-item"><a class="nav-link" href="/add-product.html">➕ إضافة منتج</a></li>
         <li class="nav-item"><a class="nav-link" href="/delete-product.html">🗑️ حذف منتج</a></li>
@@ -204,7 +205,7 @@
               <th>المبيعات</th>
               <th>التقييم</th>
               <th>السعر النهائي</th>
-              <th>تعديل</th>
+              <th>الإجراءات</th>
             </tr>
           </thead>
           <tbody id="analysis-table"></tbody>
@@ -297,10 +298,11 @@
 
         analysisTable.innerHTML += `
           <tr class="product-row">
-            <td><img src="${product.image || '/static/img/default.jpg'}" 
-                 alt="${product.name || 'غير متوفر'}" 
-                 class="product-img" 
-                 onerror="this.src='/static/img/default.jpg'"></td>
+            <td><img src="${product.image || '/static/img/default.jpg'}"
+              
+              alt="${product.name || 'غير متوفر'}" 
+              class="product-img" 
+              onerror="this.src='/static/img/default.jpg'"></td>
             <td>${product.name || 'غير متوفر'}</td>
             <td>$${parseFloat(product.price || 0).toFixed(2)}</td>
             <td>${product.discount || 0}%</td>
@@ -308,10 +310,10 @@
             <td>
               <div class="progress">
                 <div class="progress-bar" role="progressbar" 
-                     style="width: ${salesPercentage}%" 
-                     aria-valuenow="${salesPercentage}" 
-                     aria-valuemin="0" 
-                     aria-valuemax="100">
+                    style="width: ${salesPercentage}%" 
+                    aria-valuenow="${salesPercentage}" 
+                    aria-valuemin="0" 
+                    aria-valuemax="100">
                   ${Math.round(salesPercentage)}%
                 </div>
               </div>
@@ -325,9 +327,13 @@
             </td>
             <td>$${finalPrice}</td>
             <td>
-              <button class="btn btn-edit btn-sm" 
+              <button class="btn btn-edit btn-sm btn-primary" 
                       onclick="window.location.href='/edit-product.html?id=${product.id}'">
-                <i class="fas fa-edit"></i>
+                <i class="fas fa-edit"></i> تعديل
+              </button>
+              <button class="btn btn-analyze btn-sm btn-info" 
+                      onclick="window.location.href='/product_analysis.html?id=${product.id}'">
+                <i class="fas fa-chart-bar"></i> تحليل
               </button>
             </td>
           </tr>`;
