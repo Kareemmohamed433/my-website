@@ -1273,6 +1273,9 @@ def best_selling():
     except Exception as e:
         logger.error(f"❌ Failed to retrieve best-selling products: {e}")
         return jsonify({"error": "❌ Failed to retrieve best-selling products"}), 500
+@app.route('/loaderio-9d41c1f68235cf3d0e0e870b076784b2/')
+def verify_loaderio():
+    return "loaderio-9d41c1f68235cf3d0e0e870b076784b2"
 
 # Run the app
 if __name__ == '__main__':
