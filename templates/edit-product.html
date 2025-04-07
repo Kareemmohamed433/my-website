@@ -543,45 +543,45 @@
     }
 
     function deleteComment(index) {
-  if (!confirm('هل أنت متأكد من حذف هذا التعليق؟')) return;
-  
-  showLoading();
-  const updatedRatings = [...currentProduct.ratings];
-  updatedRatings.splice(index, 1);
-  
-  const updatedAverage = updatedRatings.length > 0 ?
-    updatedRatings.reduce((sum, r) => sum + r.rating, 0) / updatedRatings.length : 0;
-  
-  const formData = new FormData();
-  formData.append('ratings', JSON.stringify(updatedRatings));
-  
-  fetch(`${BASE_URL}/api/products/${productId}`, {
-    method: 'PUT',
-    body: formData,
-    credentials: 'include'
-  })
-  .then(response => {
-    if (!response.ok) {
-      return response.json().then(err => { throw new Error(err.message || 'خطأ في الحذف'); });
+      if (!confirm('هل أنت متأكد من حذف هذا التعليق؟')) return;
+      
+      showLoading();
+      const updatedRatings = [...currentProduct.ratings];
+      updatedRatings.splice(index, 1);
+      
+      const updatedAverage = updatedRatings.length > 0 ?
+        updatedRatings.reduce((sum, r) => sum + r.rating, 0) / updatedRatings.length : 0;
+      
+      const formData = new FormData();
+      formData.append('ratings', JSON.stringify(updatedRatings));
+      
+      fetch(`${BASE_URL}/api/products/${productId}`, {
+        method: 'PUT',
+        body: formData,
+        credentials: 'include' // التأكد من إرسال الكوكيز مع الطلب
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.json().then(err => { throw new Error(err.error || err.message || 'خطأ في الحذف'); });
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          currentProduct.ratings = updatedRatings;
+          currentProduct.average_rating = updatedAverage;
+          renderProduct(currentProduct);
+          showToast('نجاح', 'تم حذف التعليق بنجاح');
+        } else {
+          throw new Error(data.message || 'فشل في الحذف');
+        }
+      })
+      .catch(error => {
+        console.error('خطأ:', error);
+        showToast('خطأ', 'حدث خطأ أثناء حذف التعليق: ' + error.message, false);
+      })
+      .finally(() => hideLoading());
     }
-    return response.json();
-  })
-  .then(data => {
-    if (data.success) {
-      currentProduct.ratings = updatedRatings;
-      currentProduct.average_rating = updatedAverage;
-      renderProduct(currentProduct);
-      showToast('نجاح', 'تم حذف التعليق بنجاح');
-    } else {
-      throw new Error(data.message || 'فشل في الحذف');
-    }
-  })
-  .catch(error => {
-    console.error('خطأ:', error);
-    showToast('خطأ', 'حدث خطأ أثناء حذف التعليق: ' + error.message, false);
-  })
-  .finally(() => hideLoading());
-}
 
     function deleteImage(imageUrl) {
       if (!confirm('هل أنت متأكد من حذف هذه الصورة؟')) return;
@@ -599,11 +599,11 @@
       fetch(`${BASE_URL}/api/products/${productId}`, {
         method: 'PUT',
         body: formData,
-        credentials: 'include'
+        credentials: 'include' // التأكد من إرسال الكوكيز مع الطلب
       })
       .then(response => {
         if (!response.ok) {
-          return response.json().then(err => { throw new Error(err.message || 'خطأ في الحذف'); });
+          return response.json().then(err => { throw new Error(err.error || err.message || 'خطأ في الحذف'); });
         }
         return response.json();
       })
@@ -639,11 +639,11 @@
       fetch(`${BASE_URL}/api/products/${productId}`, {
         method: 'PUT',
         body: formData,
-        credentials: 'include'
+        credentials: 'include' // التأكد من إرسال الكوكيز مع الطلب
       })
       .then(response => {
         if (!response.ok) {
-          return response.json().then(err => { throw new Error(err.message || 'خطأ في التحديث'); });
+          return response.json().then(err => { throw new Error(err.error || err.message || 'خطأ في التحديث'); });
         }
         return response.json();
       })
@@ -670,6 +670,7 @@
       const amount = parseInt(document.getElementById('amount').value) || 0;
       const description = document.getElementById('description').value.trim();
 
+      // التحقق من صحة البيانات
       if (!name) {
         showToast('خطأ', 'يرجى إدخال اسم المنتج', false);
         return;
@@ -695,47 +696,61 @@
       formData.append('amount', amount);
       formData.append('description', description);
 
+      // إضافة الصورة الرئيسية إذا تم اختيارها
       const mainImageFile = document.getElementById('image-upload').files[0];
       if (mainImageFile) {
         formData.append('image', mainImageFile);
       }
 
+      // إضافة الصور الإضافية إذا تم اختيارها
       const additionalImages = document.getElementById('images-upload').files;
       for (let i = 0; i < additionalImages.length; i++) {
         formData.append('images', additionalImages[i]);
       }
 
+      // إرسال الطلب مع تضمين الكوكيز (التي تحتوي على التوكن)
       fetch(`${BASE_URL}/api/products/${productId}`, {
         method: 'PUT',
         body: formData,
-        credentials: 'include'
+        credentials: 'include' // هذا يضمن إرسال التوكن في الكوكيز
       })
       .then(response => {
         if (!response.ok) {
-          return response.json().then(err => { throw new Error(err.message || 'خطأ في الحفظ'); });
+          return response.json().then(err => {
+            // تحسين معالجة الأخطاء لعرض رسائل أكثر وضوحًا
+            throw new Error(err.error || err.message || 'خطأ في حفظ التغييرات');
+          });
         }
         return response.json();
       })
       .then(data => {
         if (data.success) {
           showToast('نجاح', 'تم حفظ التغييرات بنجاح!');
+          // إعادة تعيين حقول الصور بعد النجاح
           document.getElementById('image-upload').value = '';
           document.getElementById('images-upload').value = '';
           document.getElementById('main-image-preview-container').innerHTML = '';
           document.getElementById('additional-images-preview-container').innerHTML = '';
           imagesToDelete = [];
-          fetchProduct();
+          fetchProduct(); // إعادة جلب بيانات المنتج المحدثة
         } else {
           throw new Error(data.message || 'فشل في الحفظ');
         }
       })
       .catch(error => {
         console.error('خطأ:', error);
-        showToast('خطأ', 'حدث خطأ أثناء حفظ التغييرات: ' + error.message, false);
+        // عرض رسالة خطأ محددة إذا كان التوكن مفقودًا أو غير صالح
+        if (error.message.includes('Token missing') || error.message.includes('Invalid token')) {
+          showToast('خطأ', 'يرجى تسجيل الدخول مجددًا، جلسة العمل انتهت', false);
+          setTimeout(() => window.location.href = '/login.html', 2000);
+        } else {
+          showToast('خطأ', 'حدث خطأ أثناء حفظ التغييرات: ' + error.message, false);
+        }
       })
       .finally(() => hideLoading());
     }
 
+    // معاينة الصورة الرئيسية عند اختيارها
     document.getElementById('image-upload').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
@@ -751,6 +766,7 @@
       }
     });
 
+    // معاينة الصور الإضافية عند اختيارها
     document.getElementById('images-upload').addEventListener('change', function(e) {
       const files = e.target.files;
       const previewContainer = document.getElementById('additional-images-preview-container');
@@ -778,7 +794,7 @@
         showLoading();
         fetch(`${BASE_URL}/api/logout`, { 
           method: 'POST',
-          credentials: 'include'
+          credentials: 'include' // تضمين الكوكيز مع طلب تسجيل الخروج
         })
         .then(() => {
           window.location.href = '/login.html';
@@ -787,10 +803,11 @@
           console.error('خطأ:', error);
           showToast('خطأ', 'حدث خطأ أثناء تسجيل الخروج', false);
         })
-        . Astrologyfinally(() => hideLoading());
+        .finally(() => hideLoading());
       }
     }
 
+    // التحقق من التوثيق عند تحميل الصفحة
     document.addEventListener('DOMContentLoaded', () => {
       checkAuth();
     });
