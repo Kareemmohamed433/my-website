@@ -18,6 +18,8 @@
             --light-color: #ecf0f1;
             --guest-color: #9b59b6;
             --registered-color: #3498db;
+            --new-customer-color: #1abc9c;
+            --returning-customer-color: #3498db;
         }
         
         body {
@@ -148,6 +150,10 @@
             background-color: var(--guest-color);
         }
         
+        .stat-card.new-customer::before {
+            background-color: var(--new-customer-color);
+        }
+        
         .stat-card .stat-title {
             font-size: 14px;
             color: #777;
@@ -237,6 +243,21 @@
         .badge-guest {
             background-color: #e9d5ff;
             color: var(--guest-color);
+        }
+        
+        .badge-success {
+            background-color: #d1fae5;
+            color: var(--secondary-color);
+        }
+        
+        .badge-danger {
+            background-color: #fee2e2;
+            color: var(--danger-color);
+        }
+        
+        .badge-new {
+            background-color: #ccfbf1;
+            color: var(--new-customer-color);
         }
         
         .dropdown {
@@ -369,6 +390,66 @@
             margin-bottom: 20px;
         }
         
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-container input {
+            flex: 1;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+        
+        .pagination button {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        .pagination button.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
         @media (max-width: 992px) {
             .container {
                 grid-template-columns: 1fr;
@@ -473,6 +554,7 @@
                         <div class="tab" data-tab="sales">المبيعات</div>
                         <div class="tab" data-tab="customers">العملاء</div>
                         <div class="tab" data-tab="inventory">المخزون</div>
+                        <div class="tab" data-tab="reviews">التقييمات</div>
                     </div>
 
                     <div class="tab-content active" id="overview">
@@ -499,6 +581,10 @@
                                 <canvas id="categoriesChart"></canvas>
                             </div>
                         </div>
+                        <div class="chart-container">
+                            <div class="section-title"><i class="fas fa-chart-bar"></i><span>مقارنة المبيعات حسب المناطق</span></div>
+                            <canvas id="salesByRegionChart"></canvas>
+                        </div>
                     </div>
 
                     <div class="tab-content" id="customers">
@@ -511,6 +597,10 @@
                                 <div class="section-title"><i class="fas fa-chart-bar"></i><span>أفضل 5 عملاء إنفاقاً</span></div>
                                 <canvas id="topCustomersChart"></canvas>
                             </div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="section-title"><i class="fas fa-chart-line"></i><span>نمو العملاء الشهري</span></div>
+                            <canvas id="customerGrowthChart"></canvas>
                         </div>
                         <div class="table-container">
                             <div class="section-title"><i class="fas fa-users"></i><span>قائمة العملاء</span></div>
@@ -529,6 +619,32 @@
                                 <div class="section-title"><i class="fas fa-warehouse"></i><span>مستويات المخزون</span></div>
                                 <canvas id="inventoryChart"></canvas>
                             </div>
+                            <div class="chart-container">
+                                <div class="section-title"><i class="fas fa-chart-line"></i><span>حركة المخزون الشهرية</span></div>
+                                <canvas id="inventoryMovementChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="reviews">
+                        <div class="charts-section">
+                            <div class="chart-container">
+                                <div class="section-title"><i class="fas fa-star"></i><span>توزيع التقييمات</span></div>
+                                <canvas id="reviewsDistributionChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <div class="section-title"><i class="fas fa-chart-line"></i><span>تقييمات المنتج الشهرية</span></div>
+                                <canvas id="monthlyReviewsChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <div class="section-title"><i class="fas fa-comments"></i><span>آخر التقييمات</span></div>
+                            <table id="reviewsTable">
+                                <thead>
+                                    <tr><th>التقييم</th><th>العميل</th><th>التعليق</th><th>التاريخ</th><th>الحالة</th></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -536,6 +652,29 @@
 
             <!-- قسم المنتجات -->
             <div class="hidden" id="productsContent">
+                <div class="search-container">
+                    <input type="text" id="productSearch" class="form-control" placeholder="ابحث عن منتج...">
+                    <button class="btn btn-primary" onclick="searchProducts()">بحث</button>
+                </div>
+                
+                <div class="stats-cards animated">
+                    <div class="stat-card primary">
+                        <div class="stat-title">إجمالي المنتجات</div>
+                        <div class="stat-value" id="totalProductsCount">0</div>
+                        <div class="stat-change"><i class="fas fa-arrow-up"></i> 5% عن الشهر الماضي</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-title">المنتجات النشطة</div>
+                        <div class="stat-value" id="activeProducts">0</div>
+                        <div class="stat-change"><i class="fas fa-arrow-up"></i> 3% عن الشهر الماضي</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-title">المنتجات منخفضة المخزون</div>
+                        <div class="stat-value" id="lowStockProducts">0</div>
+                        <div class="stat-change"><i class="fas fa-arrow-up"></i> 8% عن الشهر الماضي</div>
+                    </div>
+                </div>
+
                 <div class="table-container animated">
                     <div class="section-title"><i class="fas fa-exclamation-circle"></i><span>المنتجات التي تحتاج انتباه</span></div>
                     <table id="attentionProductsTable">
@@ -545,10 +684,48 @@
                         <tbody></tbody>
                     </table>
                 </div>
+
+                <div class="table-container animated" style="margin-top: 20px;">
+                    <div class="section-title"><i class="fas fa-boxes"></i><span>جميع المنتجات</span></div>
+                    <table id="allProductsTable">
+                        <thead>
+                            <tr><th>رقم المنتج</th><th>الصورة</th><th>اسم المنتج</th><th>الفئة</th><th>السعر</th><th>المخزون</th><th>التقييم</th><th>الحالة</th><th>إجراءات</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div class="pagination">
+                        <button onclick="prevPage()">السابق</button>
+                        <span id="pageInfo">الصفحة 1 من 1</span>
+                        <button onclick="nextPage()">التالي</button>
+                    </div>
+                </div>
             </div>
 
             <!-- قسم الطلبات -->
             <div class="hidden" id="ordersContent">
+                <div class="stats-cards animated">
+                    <div class="stat-card primary">
+                        <div class="stat-title">إجمالي الطلبات</div>
+                        <div class="stat-value" id="totalOrdersCount">0</div>
+                        <div class="stat-change"><i class="fas fa-arrow-up"></i> 15% عن الشهر الماضي</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-title">الطلبات المكتملة</div>
+                        <div class="stat-value" id="completedOrders">0</div>
+                        <div class="stat-change"><i class="fas fa-arrow-up"></i> 10% عن الشهر الماضي</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-title">الطلبات قيد المعالجة</div>
+                        <div class="stat-value" id="processingOrders">0</div>
+                        <div class="stat-change"><i class="fas fa-arrow-up"></i> 5% عن الشهر الماضي</div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-title">الطلبات الملغاة</div>
+                        <div class="stat-value" id="canceledOrdersCount">0</div>
+                        <div class="stat-change"><i class="fas fa-arrow-down"></i> 2% عن الشهر الماضي</div>
+                    </div>
+                </div>
+
                 <div class="charts-section animated">
                     <div class="chart-container">
                         <div class="section-title"><i class="fas fa-shopping-cart"></i><span>تحليل حالات الطلبات</span></div>
@@ -558,6 +735,21 @@
                         <div class="section-title"><i class="fas fa-dollar-sign"></i><span>إجمالي الطلبات الشهرية</span></div>
                         <canvas id="ordersMonthlyChart"></canvas>
                     </div>
+                </div>
+
+                <div class="chart-container animated">
+                    <div class="section-title"><i class="fas fa-chart-bar"></i><span>متوسط قيمة الطلب حسب الفئة</span></div>
+                    <canvas id="avgOrderValueChart"></canvas>
+                </div>
+
+                <div class="table-container animated">
+                    <div class="section-title"><i class="fas fa-list"></i><span>آخر الطلبات</span></div>
+                    <table id="recentOrdersTable">
+                        <thead>
+                            <tr><th>رقم الطلب</th><th>العميل</th><th>التاريخ</th><th>المبلغ</th><th>الحالة</th><th>الإجراءات</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
 
@@ -579,6 +771,11 @@
                         <div class="stat-value" id="guestCustomers">0</div>
                         <div class="stat-change"><i class="fas fa-arrow-up"></i> 15% عن الشهر الماضي</div>
                     </div>
+                    <div class="stat-card new-customer">
+                        <div class="stat-title">عملاء جدد هذا الشهر</div>
+                        <div class="stat-value" id="newCustomers">0</div>
+                        <div class="stat-change"><i class="fas fa-arrow-up"></i> 20% عن الشهر الماضي</div>
+                    </div>
                 </div>
 
                 <div class="customer-charts animated">
@@ -592,14 +789,96 @@
                     </div>
                 </div>
 
+                <div class="chart-container animated">
+                    <div class="section-title"><i class="fas fa-map-marked-alt"></i><span>توزيع العملاء حسب المنطقة</span></div>
+                    <canvas id="customersByRegionChart"></canvas>
+                </div>
+
                 <div class="table-container animated">
                     <div class="section-title"><i class="fas fa-users"></i><span>قائمة جميع العملاء</span></div>
+                    <div class="search-container">
+                        <input type="text" id="customerSearch" class="form-control" placeholder="ابحث عن عميل...">
+                        <button class="btn btn-primary" onclick="searchCustomers()">بحث</button>
+                    </div>
                     <table id="allCustomersTable">
                         <thead>
-                            <tr><th>اسم المستخدم</th><th>البريد</th><th>النوع</th><th>عدد الطلبات</th><th>إجمالي العناصر</th><th>إجمالي الإنفاق</th><th>آخر طلب</th></tr>
+                            <tr><th>اسم المستخدم</th><th>البريد</th><th>النوع</th><th>عدد الطلبات</th><th>إجمالي العناصر</th><th>إجمالي الإنفاق</th><th>آخر طلب</th><th>الحالة</th></tr>
                         </thead>
                         <tbody></tbody>
                     </table>
+                    <div class="pagination">
+                        <button onclick="prevCustomerPage()">السابق</button>
+                        <span id="customerPageInfo">الصفحة 1 من 1</span>
+                        <button onclick="nextCustomerPage()">التالي</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قسم التقارير -->
+            <div class="hidden" id="reportsContent">
+                <div class="stats-cards animated">
+                    <div class="stat-card primary">
+                        <div class="stat-title">إجمالي الإيرادات</div>
+                        <div class="stat-value" id="totalRevenue">0 L.E</div>
+                        <div class="stat-change"><i class="fas fa-arrow-up"></i> 18% عن الشهر الماضي</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-title">إجمالي الأرباح</div>
+                        <div class="stat-value" id="totalProfit">0 L.E</div>
+                        <div class="stat-change"><i class="fas fa-arrow-up"></i> 12% عن الشهر الماضي</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-title">متوسط قيمة الطلب</div>
+                        <div class="stat-value" id="avgOrderValue">0 L.E</div>
+                        <div class="stat-change"><i class="fas fa-arrow-up"></i> 5% عن الشهر الماضي</div>
+                    </div>
+                </div>
+
+                <div class="charts-section animated">
+                    <div class="chart-container">
+                        <div class="section-title"><i class="fas fa-chart-line"></i><span>الإيرادات الشهرية</span></div>
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="section-title"><i class="fas fa-chart-bar"></i><span>أداء الفئات</span></div>
+                        <canvas id="categoryPerformanceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container animated">
+                    <div class="section-title"><i class="fas fa-chart-pie"></i><span>توزيع مصادر العملاء</span></div>
+                    <canvas id="customerSourcesChart"></canvas>
+                </div>
+
+                <div class="chart-container animated">
+                    <div class="section-title"><i class="fas fa-chart-line"></i><span>معدل التحويل</span></div>
+                    <canvas id="conversionRateChart"></canvas>
+                </div>
+            </div>
+
+            <!-- قسم الإعدادات -->
+            <div class="hidden" id="settingsContent">
+                <div class="chart-container animated">
+                    <div class="section-title"><i class="fas fa-cog"></i><span>إعدادات النظام</span></div>
+                    <form id="systemSettingsForm">
+                        <div style="margin-bottom: 15px;">
+                            <label for="storeName">اسم المتجر:</label>
+                            <input type="text" id="storeName" class="form-control" style="width: 100%;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label for="storeCurrency">عملة المتجر:</label>
+                            <select id="storeCurrency" class="form-control" style="width: 100%;">
+                                <option value="SAR">ريال سعودي (ر.س)</option>
+                                <option value="USD">دولار أمريكي ($)</option>
+                                <option value="EUR">يورو (€)</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label for="inventoryThreshold">حد إعادة الطلب:</label>
+                            <input type="number" id="inventoryThreshold" class="form-control" style="width: 100%;">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="saveSettings()">حفظ الإعدادات</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -611,10 +890,17 @@
         let productsData = [];
         let ordersData = [];
         let usersData = [];
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let currentCustomerPage = 1;
+        let filteredProducts = [];
+        let filteredCustomers = [];
         let yearlyChart, monthlyChart, topProductsChart, categoriesChart, inventoryChart, ordersStatusChart, ordersMonthlyChart;
-        let customerTypeChart, topCustomersChart, customersPieChart, topSpendersChart;
+        let customerTypeChart, topCustomersChart, customersPieChart, topSpendersChart, salesByRegionChart, customerGrowthChart;
+        let inventoryMovementChart, reviewsDistributionChart, monthlyReviewsChart, avgOrderValueChart, customersByRegionChart;
+        let revenueChart, categoryPerformanceChart, customerSourcesChart, conversionRateChart;
 
-        // Helper function to get CSS variable value
+        // دالة مساعدة للحصول على قيمة متغير CSS
         function getCssVariable(name) {
             return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
         }
@@ -644,7 +930,10 @@
                 const response = await fetch(`${BASE_URL}/api/products`, { credentials: 'include' });
                 if (!response.ok) throw new Error('خطأ في جلب المنتجات');
                 productsData = await response.json();
+                filteredProducts = [...productsData];
                 populateProductSelect(productsData);
+                updateProductsStats();
+                updateAllProductsTable();
                 return productsData;
             } catch (error) {
                 console.error('خطأ في جلب بيانات المنتجات:', error);
@@ -660,7 +949,7 @@
                 if (!response.ok) throw new Error('خطأ في جلب الطلبات');
                 ordersData = await response.json();
                 
-                // Calculate total spent for each user
+                // حساب إجمالي الإنفاق لكل عميل
                 const userSpending = {};
                 ordersData.forEach(order => {
                     const email = order.customerDetails?.email || 'guest';
@@ -674,7 +963,7 @@
                     userSpending[email].orders.push(order);
                 });
                 
-                // Add totalSpent to usersData
+                // إضافة إجمالي الإنفاق إلى بيانات العملاء
                 if (usersData && usersData.length) {
                     usersData.forEach(user => {
                         if (user.email && userSpending[user.email]) {
@@ -684,6 +973,8 @@
                     });
                 }
                 
+                updateOrdersStats();
+                updateRecentOrdersTable();
                 return ordersData;
             } catch (error) {
                 console.error('خطأ في جلب بيانات الطلبات:', error);
@@ -698,14 +989,80 @@
                 const response = await fetch(`${BASE_URL}/api/users`, { credentials: 'include' });
                 if (!response.ok) throw new Error('خطأ في جلب العملاء');
                 usersData = await response.json();
+                filteredCustomers = [...usersData];
                 updateCustomersStats(usersData);
                 updateUsersTable(usersData);
-                updateAllCustomersTable(usersData);
+                updateAllCustomersTable();
                 return usersData;
             } catch (error) {
                 console.error('خطأ في جلب بيانات العملاء:', error);
                 showErrorToast('فشل في جلب بيانات العملاء');
                 return [];
+            }
+        }
+
+        // تحديث إحصائيات المنتجات
+        function updateProductsStats() {
+            const totalProducts = productsData.length;
+            const activeProducts = productsData.filter(p => p.status === 'active').length;
+            const lowStockProducts = productsData.filter(p => (p.amount || 0) < 3).length;
+            
+            document.getElementById('totalProductsCount').textContent = totalProducts;
+            document.getElementById('activeProducts').textContent = activeProducts;
+            document.getElementById('lowStockProducts').textContent = lowStockProducts;
+        }
+
+        // تحديث إحصائيات الطلبات
+        function updateOrdersStats() {
+            const totalOrders = ordersData.length;
+            const completedOrders = ordersData.filter(o => o.status === 'completed').length;
+            const processingOrders = ordersData.filter(o => o.status === 'processing').length;
+            const canceledOrders = ordersData.filter(o => o.status === 'canceled').length;
+            
+            document.getElementById('totalOrdersCount').textContent = totalOrders;
+            document.getElementById('completedOrders').textContent = completedOrders;
+            document.getElementById('processingOrders').textContent = processingOrders;
+            document.getElementById('canceledOrdersCount').textContent = canceledOrders;
+        }
+
+        // تحديث جدول الطلبات الحديثة
+        function updateRecentOrdersTable() {
+            const tableBody = document.getElementById('recentOrdersTable')?.querySelector('tbody');
+            if (!tableBody) return;
+            
+            tableBody.innerHTML = '';
+            
+            // عرض فقط 10 طلبات حديثة
+            const recentOrders = [...ordersData]
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .slice(0, 10);
+            
+            recentOrders.forEach(order => {
+                const statusBadge = getStatusBadge(order.status);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${order.id || 'غير متاح'}</td>
+                    <td>${order.customerDetails?.name || 'ضيف'}</td>
+                    <td>${new Date(order.created_at).toLocaleDateString('ar-SA')}</td>
+                    <td>${(order.total || 0).toFixed(2)} ر.س</td>
+                    <td>${statusBadge}</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="viewOrderDetails('${order.id}')">عرض التفاصيل</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // الحصول على شارة الحالة المناسبة
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'completed':
+                    return '<span class="badge badge-success">مكتمل</span>';
+                case 'processing':
+                    return '<span class="badge badge-primary">قيد المعالجة</span>';
+                case 'canceled':
+                    return '<span class="badge badge-danger">ملغى</span>';
+                default:
+                    return '<span class="badge badge-warning">قيد الانتظار</span>';
             }
         }
 
@@ -736,15 +1093,20 @@
             const registeredCustomers = users.filter(u => u.role !== 'guest').length;
             const guestCustomers = users.filter(u => u.role === 'guest').length;
             
-            const totalCustomersEl = document.getElementById('totalCustomersCount');
-            const registeredCustomersEl = document.getElementById('registeredCustomers');
-            const guestCustomersEl = document.getElementById('guestCustomers');
+            // حساب العملاء الجدد هذا الشهر
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            const newCustomers = users.filter(u => {
+                const joinDate = new Date(u.join_date || u.created_at);
+                return joinDate.getMonth() === currentMonth && joinDate.getFullYear() === currentYear;
+            }).length;
             
-            if (totalCustomersEl) totalCustomersEl.textContent = totalCustomers;
-            if (registeredCustomersEl) registeredCustomersEl.textContent = registeredCustomers;
-            if (guestCustomersEl) guestCustomersEl.textContent = guestCustomers;
+            document.getElementById('totalCustomersCount').textContent = totalCustomers;
+            document.getElementById('registeredCustomers').textContent = registeredCustomers;
+            document.getElementById('guestCustomers').textContent = guestCustomers;
+            document.getElementById('newCustomers').textContent = newCustomers;
             
-            // تحديث مخطط توزيع العملاء
+            // تحديث مخططات العملاء
             updateCustomersCharts(registeredCustomers, guestCustomers);
         }
 
@@ -753,6 +1115,7 @@
             const registeredColor = getCssVariable('--registered-color');
             const guestColor = getCssVariable('--guest-color');
             const primaryColor = getCssVariable('--primary-color');
+            const newCustomerColor = getCssVariable('--new-customer-color');
 
             // مخطط دائري لتوزيع العملاء
             const customersPieCtx = document.getElementById('customersPieChart')?.getContext('2d');
@@ -800,7 +1163,7 @@
                     data: {
                         labels: topSpenders.map(u => u.username || u.email),
                         datasets: [{
-                            label: 'إجمالي الإنفاق (ر.س)',
+                            label: 'إجمالي الإنفاق (L.E)',
                             data: topSpenders.map(u => u.totalSpent || 0),
                             backgroundColor: topSpenders.map(u => u.role === 'guest' ? guestColor : primaryColor)
                         }]
@@ -810,6 +1173,79 @@
                         responsive: true,
                         plugins: { legend: { display: false } },
                         scales: { x: { beginAtZero: true } }
+                    }
+                });
+            }
+
+            // مخطط نمو العملاء الشهري
+            const monthlyGrowth = Array(12).fill(0);
+            usersData.forEach(user => {
+                const joinDate = new Date(user.join_date || user.created_at);
+                const month = joinDate.getMonth();
+                monthlyGrowth[month]++;
+            });
+            
+            const customerGrowthCtx = document.getElementById('customerGrowthChart')?.getContext('2d');
+            if (customerGrowthCtx) {
+                if (customerGrowthChart) customerGrowthChart.destroy();
+                customerGrowthChart = new Chart(customerGrowthCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+                        datasets: [{
+                            label: 'عملاء جدد',
+                            data: monthlyGrowth,
+                            borderColor: newCustomerColor,
+                            backgroundColor: 'rgba(26, 188, 156, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'top' } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+
+            // مخطط توزيع العملاء حسب المنطقة
+            const regions = {
+                'الرياض': 0,
+                'جدة': 0,
+                'مكة': 0,
+                'الشرقية': 0,
+                'المدينة': 0
+            };
+            
+            usersData.forEach(user => {
+                const region = user.region || 'غير محدد';
+                if (regions.hasOwnProperty(region)) {
+                    regions[region]++;
+                } else {
+                    regions[region] = 1;
+                }
+            });
+            
+            const customersByRegionCtx = document.getElementById('customersByRegionChart')?.getContext('2d');
+            if (customersByRegionCtx) {
+                if (customersByRegionChart) customersByRegionChart.destroy();
+                customersByRegionChart = new Chart(customersByRegionCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(regions),
+                        datasets: [{
+                            label: 'عدد العملاء',
+                            data: Object.values(regions),
+                            backgroundColor: [
+                                '#3498db', '#2ecc71', '#9b59b6', '#f1c40f', '#e67e22'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
                     }
                 });
             }
@@ -844,13 +1280,17 @@
         }
 
         // تحديث جدول جميع العملاء في صفحة العملاء
-        function updateAllCustomersTable(users) {
+        function updateAllCustomersTable() {
             const tableBody = document.getElementById('allCustomersTable')?.querySelector('tbody');
             if (!tableBody) return;
             
             tableBody.innerHTML = '';
             
-            users.forEach(user => {
+            const startIndex = (currentCustomerPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex);
+            
+            paginatedCustomers.forEach(user => {
                 const row = document.createElement('tr');
                 const userType = user.role === 'guest' ? 
                     '<span class="badge badge-guest">ضيف</span>' : 
@@ -864,17 +1304,134 @@
                 const lastOrder = user.orders && user.orders.length > 0 ? 
                     new Date(user.orders[0].created_at).toLocaleDateString('ar-SA') : 'لا يوجد';
                 
+                // تحديد حالة العميل
+                const isNewCustomer = isNewThisMonth(user.join_date || user.created_at);
+                const customerStatus = isNewCustomer ? 
+                    '<span class="badge badge-new">جديد</span>' : 
+                    '<span class="badge badge-success">عائد</span>';
+                
                 row.innerHTML = `
                     <td>${user.username || 'ضيف'}</td>
                     <td>${user.email || 'غير متاح'}</td>
                     <td>${userType}</td>
                     <td>${user.orderCount || 0}</td>
                     <td>${user.totalItemsOrdered || 0}</td>
-                    <td>${totalSpent.toFixed(2)} ر.س</td>
+                    <td>${totalSpent.toFixed(2)} L.E</td>
                     <td>${lastOrder}</td>
+                    <td>${customerStatus}</td>
                 `;
                 tableBody.appendChild(row);
             });
+            
+            // تحديث معلومات الصفحة
+            const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+            document.getElementById('customerPageInfo').textContent = `الصفحة ${currentCustomerPage} من ${totalPages}`;
+        }
+
+        // التحقق مما إذا كان العميل جديدًا هذا الشهر
+        function isNewThisMonth(joinDate) {
+            const join = new Date(joinDate);
+            const now = new Date();
+            return join.getMonth() === now.getMonth() && join.getFullYear() === now.getFullYear();
+        }
+
+        // تحديث جدول جميع المنتجات
+        function updateAllProductsTable() {
+            const tableBody = document.getElementById('allProductsTable')?.querySelector('tbody');
+            if (!tableBody) return;
+            
+            tableBody.innerHTML = '';
+            
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+            
+            paginatedProducts.forEach(product => {
+                const row = document.createElement('tr');
+                const statusBadge = product.status === 'active' ? 
+                    '<span class="badge badge-success">نشط</span>' : 
+                    '<span class="badge badge-danger">غير نشط</span>';
+                
+                const stockStatus = (product.amount || 0) < 3 ? 
+                    '<span class="badge badge-warning">منخفض</span>' : 
+                    '<span class="badge badge-success">متوفر</span>';
+                
+                row.innerHTML = `
+                    <td>${product.id || 'غير متاح'}</td>
+                    <td><img src="${product.image || '/static/img/default-product.jpg'}" width="50" height="50" style="object-fit: cover;"></td>
+                    <td>${product.name || 'غير محدد'}</td>
+                    <td>${product.category || 'غير محدد'}</td>
+                    <td>${(product.price || 0).toFixed(2)} ر.س</td>
+                    <td>${product.amount || 0}</td>
+                    <td>${product.average_rating || 0} (${product.ratings?.length || 0})</td>
+                    <td>${stockStatus}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editProduct('${product.id}')">تعديل</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // تحديث معلومات الصفحة
+            const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+            document.getElementById('pageInfo').textContent = `الصفحة ${currentPage} من ${totalPages}`;
+        }
+
+        // البحث عن المنتجات
+        function searchProducts() {
+            const searchTerm = document.getElementById('productSearch').value.toLowerCase();
+            filteredProducts = productsData.filter(product => 
+                (product.name && product.name.toLowerCase().includes(searchTerm)) ||
+                (product.category && product.category.toLowerCase().includes(searchTerm)) ||
+                (product.id && product.id.toString().includes(searchTerm))
+            );
+            currentPage = 1;
+            updateAllProductsTable();
+        }
+
+        // البحث عن العملاء
+        function searchCustomers() {
+            const searchTerm = document.getElementById('customerSearch').value.toLowerCase();
+            filteredCustomers = usersData.filter(user => 
+                (user.username && user.username.toLowerCase().includes(searchTerm)) ||
+                (user.email && user.email.toLowerCase().includes(searchTerm))
+            );
+            currentCustomerPage = 1;
+            updateAllCustomersTable();
+        }
+
+        // الصفحة التالية للمنتجات
+        function nextPage() {
+            const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                updateAllProductsTable();
+            }
+        }
+
+        // الصفحة السابقة للمنتجات
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                updateAllProductsTable();
+            }
+        }
+
+        // الصفحة التالية للعملاء
+        function nextCustomerPage() {
+            const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+            if (currentCustomerPage < totalPages) {
+                currentCustomerPage++;
+                updateAllCustomersTable();
+            }
+        }
+
+        // الصفحة السابقة للعملاء
+        function prevCustomerPage() {
+            if (currentCustomerPage > 1) {
+                currentCustomerPage--;
+                updateAllCustomersTable();
+            }
         }
 
         // حساب مبيعات المنتج
@@ -902,7 +1459,7 @@
             const totalProductsEl = document.getElementById('totalProducts');
             const canceledOrdersEl = document.getElementById('canceledOrders');
             
-            if (totalCustomersEl) totalCustomersEl.textContent = `${totalSales.toFixed(2)} ر.س`;
+            if (totalCustomersEl) totalCustomersEl.textContent = `${totalSales.toFixed(2)} L.E`;
             if (totalCustomersCountEl) totalCustomersCountEl.textContent = usersData.length;
             if (totalProductsEl) totalProductsEl.textContent = productsData.length;
             if (canceledOrdersEl) canceledOrdersEl.textContent = ordersData.filter(o => o.status === 'canceled').length;
@@ -950,6 +1507,7 @@
             const primaryColor = getCssVariable('--primary-color');
             const guestColor = getCssVariable('--guest-color');
             const registeredColor = getCssVariable('--registered-color');
+            const newCustomerColor = getCssVariable('--new-customer-color');
 
             // تدمير المخططات القديمة إذا كانت موجودة
             if (yearlyChart) yearlyChart.destroy();
@@ -961,6 +1519,17 @@
             if (ordersMonthlyChart) ordersMonthlyChart.destroy();
             if (customerTypeChart) customerTypeChart.destroy();
             if (topCustomersChart) topCustomersChart.destroy();
+            if (salesByRegionChart) salesByRegionChart.destroy();
+            if (customerGrowthChart) customerGrowthChart.destroy();
+            if (inventoryMovementChart) inventoryMovementChart.destroy();
+            if (reviewsDistributionChart) reviewsDistributionChart.destroy();
+            if (monthlyReviewsChart) monthlyReviewsChart.destroy();
+            if (avgOrderValueChart) avgOrderValueChart.destroy();
+            if (customersByRegionChart) customersByRegionChart.destroy();
+            if (revenueChart) revenueChart.destroy();
+            if (categoryPerformanceChart) categoryPerformanceChart.destroy();
+            if (customerSourcesChart) customerSourcesChart.destroy();
+            if (conversionRateChart) conversionRateChart.destroy();
 
             // أداء المنتج خلال السنة (تبويب "نظرة عامة")
             if (activeTab === 'overview') {
@@ -1089,6 +1658,54 @@
                         }
                     });
                 }
+
+                // مخطط مبيعات حسب المنطقة
+                const regionsSales = {
+                    'الرياض': 0,
+                    'جدة': 0,
+                    'مكة': 0,
+                    'الشرقية': 0,
+                    'المدينة': 0
+                };
+                
+                ordersData.forEach(order => {
+                    const region = order.shipping?.region || 'غير محدد';
+                    if (regionsSales.hasOwnProperty(region)) {
+                        regionsSales[region] += order.total || 0;
+                    } else {
+                        regionsSales[region] = order.total || 0;
+                    }
+                });
+                
+                const salesByRegionCtx = document.getElementById('salesByRegionChart')?.getContext('2d');
+                if (salesByRegionCtx) {
+                    salesByRegionChart = new Chart(salesByRegionCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: Object.keys(regionsSales),
+                            datasets: [{
+                                label: 'المبيعات حسب المنطقة',
+                                data: Object.values(regionsSales),
+                                backgroundColor: ['#3498db', '#2ecc71', '#9b59b6', '#f1c40f', '#e67e22']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const total = Object.values(regionsSales).reduce((a, b) => a + b, 0);
+                                            const percentage = total > 0 ? Math.round(context.parsed * 100 / total) : 0;
+                                            return `${context.label}: ${context.raw.toFixed(2)} L.E (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
             }
 
             // العملاء (تبويب "العملاء")
@@ -1140,7 +1757,7 @@
                         data: {
                             labels: topCustomers.map(u => u.username || u.email),
                             datasets: [{
-                                label: 'إجمالي الإنفاق (ر.س)',
+                                label: 'إجمالي الإنفاق (L.E)',
                                 data: topCustomers.map(u => u.totalSpent || 0),
                                 backgroundColor: topCustomers.map(u => u.role === 'guest' ? guestColor : primaryColor)
                             }]
@@ -1148,6 +1765,37 @@
                         options: {
                             responsive: true,
                             plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+
+                // مخطط نمو العملاء الشهري
+                const monthlyGrowth = Array(12).fill(0);
+                usersData.forEach(user => {
+                    const joinDate = new Date(user.join_date || user.created_at);
+                    const month = joinDate.getMonth();
+                    monthlyGrowth[month]++;
+                });
+                
+                const customerGrowthCtx = document.getElementById('customerGrowthChart')?.getContext('2d');
+                if (customerGrowthCtx) {
+                    customerGrowthChart = new Chart(customerGrowthCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+                            datasets: [{
+                                label: 'عملاء جدد',
+                                data: monthlyGrowth,
+                                borderColor: newCustomerColor,
+                                backgroundColor: 'rgba(26, 188, 156, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'top' } },
                             scales: { y: { beginAtZero: true } }
                         }
                     });
@@ -1173,6 +1821,180 @@
                             plugins: { legend: { display: false } },
                             scales: { y: { beginAtZero: true } }
                         }
+                    });
+                }
+
+                // مخطط حركة المخزون الشهرية
+                const inventoryMovement = Array(12).fill(0);
+                ordersData.forEach(order => {
+                    if (order.items && order.items.length) {
+                        order.items.forEach(item => {
+                            if (!product || item.id === product.id) {
+                                const date = new Date(order.created_at);
+                                const month = date.getMonth();
+                                inventoryMovement[month] += item.quantity || 0;
+                            }
+                        });
+                    }
+                });
+                
+                const inventoryMovementCtx = document.getElementById('inventoryMovementChart')?.getContext('2d');
+                if (inventoryMovementCtx) {
+                    inventoryMovementChart = new Chart(inventoryMovementCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+                            datasets: [{
+                                label: 'كمية المباع',
+                                data: inventoryMovement,
+                                borderColor: '#e74c3c',
+                                backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'top' } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+            }
+
+            // التقييمات (تبويب "التقييمات")
+            if (activeTab === 'reviews') {
+                // توزيع التقييمات
+                const ratingsDistribution = [0, 0, 0, 0, 0];
+                if (product && product.ratings) {
+                    product.ratings.forEach(rating => {
+                        if (rating.stars >= 1 && rating.stars <= 5) {
+                            ratingsDistribution[rating.stars - 1]++;
+                        }
+                    });
+                } else {
+                    productsData.forEach(p => {
+                        if (p.ratings) {
+                            p.ratings.forEach(rating => {
+                                if (rating.stars >= 1 && rating.stars <= 5) {
+                                    ratingsDistribution[rating.stars - 1]++;
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                const reviewsDistributionCtx = document.getElementById('reviewsDistributionChart')?.getContext('2d');
+                if (reviewsDistributionCtx) {
+                    reviewsDistributionChart = new Chart(reviewsDistributionCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['1 نجمة', '2 نجوم', '3 نجوم', '4 نجوم', '5 نجوم'],
+                            datasets: [{
+                                label: 'عدد التقييمات',
+                                data: ratingsDistribution,
+                                backgroundColor: ['#e74c3c', '#f39c12', '#f1c40f', '#2ecc71', '#27ae60']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+
+                // التقييمات الشهرية
+                const monthlyRatings = Array(12).fill(0);
+                const monthlyRatingsCount = Array(12).fill(0);
+                
+                if (product && product.ratings) {
+                    product.ratings.forEach(rating => {
+                        const date = new Date(rating.date || rating.created_at);
+                        const month = date.getMonth();
+                        monthlyRatings[month] += rating.stars || 0;
+                        monthlyRatingsCount[month]++;
+                    });
+                } else {
+                    productsData.forEach(p => {
+                        if (p.ratings) {
+                            p.ratings.forEach(rating => {
+                                const date = new Date(rating.date || rating.created_at);
+                                const month = date.getMonth();
+                                monthlyRatings[month] += rating.stars || 0;
+                                monthlyRatingsCount[month]++;
+                            });
+                        }
+                    });
+                }
+                
+                const avgMonthlyRatings = monthlyRatings.map((sum, i) => 
+                    monthlyRatingsCount[i] > 0 ? (sum / monthlyRatingsCount[i]).toFixed(1) : 0
+                );
+                
+                const monthlyReviewsCtx = document.getElementById('monthlyReviewsChart')?.getContext('2d');
+                if (monthlyReviewsCtx) {
+                    monthlyReviewsChart = new Chart(monthlyReviewsCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+                            datasets: [{
+                                label: 'متوسط التقييم',
+                                data: avgMonthlyRatings,
+                                borderColor: '#f39c12',
+                                backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'top' } },
+                            scales: { 
+                                y: { 
+                                    beginAtZero: false,
+                                    min: 0,
+                                    max: 5
+                                } 
+                            }
+                        }
+                    });
+                }
+
+                // تحديث جدول التقييمات
+                const reviewsTableBody = document.getElementById('reviewsTable')?.querySelector('tbody');
+                if (reviewsTableBody) {
+                    reviewsTableBody.innerHTML = '';
+                    
+                    let allRatings = [];
+                    if (product && product.ratings) {
+                        allRatings = product.ratings.map(r => ({ ...r, productName: product.name }));
+                    } else {
+                        productsData.forEach(p => {
+                            if (p.ratings) {
+                                allRatings = allRatings.concat(
+                                    p.ratings.map(r => ({ ...r, productName: p.name }))
+                                );
+                            }
+                        });
+                    }
+                    
+                    // عرض آخر 10 تقييمات
+                    const recentRatings = allRatings
+                        .sort((a, b) => new Date(b.date || b.created_at) - new Date(a.date || a.created_at))
+                        .slice(0, 10);
+                    
+                    recentRatings.forEach(rating => {
+                        const stars = '★'.repeat(rating.stars) + '☆'.repeat(5 - rating.stars);
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${stars}</td>
+                            <td>${rating.customerName || 'ضيف'}</td>
+                            <td>${rating.comment || 'لا يوجد تعليق'}</td>
+                            <td>${new Date(rating.date || rating.created_at).toLocaleDateString('ar-SA')}</td>
+                            <td>${rating.approved ? '<span class="badge badge-success">معتمد</span>' : '<span class="badge badge-warning">قيد المراجعة</span>'}</td>
+                        `;
+                        reviewsTableBody.appendChild(row);
                     });
                 }
             }
@@ -1251,6 +2073,272 @@
                         }
                     });
                 }
+
+                // مخطط متوسط قيمة الطلب حسب الفئة
+                const categoryOrderValues = {};
+                const categoryOrderCounts = {};
+                
+                ordersData.forEach(order => {
+                    if (order.items && order.items.length) {
+                        order.items.forEach(item => {
+                            const product = productsData.find(p => p.id === item.id);
+                            if (product) {
+                                const category = product.category || 'غير محدد';
+                                categoryOrderValues[category] = (categoryOrderValues[category] || 0) + (item.price || 0);
+                                categoryOrderCounts[category] = (categoryOrderCounts[category] || 0) + 1;
+                            }
+                        });
+                    }
+                });
+                
+                const avgOrderValues = {};
+                Object.keys(categoryOrderValues).forEach(category => {
+                    avgOrderValues[category] = categoryOrderValues[category] / (categoryOrderCounts[category] || 1);
+                });
+                
+                const avgOrderValueCtx = document.getElementById('avgOrderValueChart')?.getContext('2d');
+                if (avgOrderValueCtx) {
+                    avgOrderValueChart = new Chart(avgOrderValueCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(avgOrderValues),
+                            datasets: [{
+                                label: 'متوسط قيمة الطلب (ر.س)',
+                                data: Object.values(avgOrderValues),
+                                backgroundColor: '#9b59b6'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+            }
+
+            // التقارير (عند النقر على "التقارير" في الشريط الجانبي)
+            if (activeTab === 'reports') {
+                // مخطط الإيرادات الشهرية
+                const monthlyRevenue = Array(12).fill(0);
+                ordersData.forEach(order => {
+                    const date = new Date(order.created_at);
+                    const month = date.getMonth();
+                    monthlyRevenue[month] += order.total || 0;
+                });
+                
+                const revenueCtx = document.getElementById('revenueChart')?.getContext('2d');
+                if (revenueCtx) {
+                    revenueChart = new Chart(revenueCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+                            datasets: [{
+                                label: 'الإيرادات (ر.س)',
+                                data: monthlyRevenue,
+                                borderColor: '#2ecc71',
+                                backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'top' } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+
+                // مخطط أداء الفئات
+                const categoryPerformance = {};
+                productsData.forEach(product => {
+                    const category = product.category || 'غير محدد';
+                    const sales = calculateProductSales(product.id);
+                    categoryPerformance[category] = (categoryPerformance[category] || 0) + sales;
+                });
+                
+                const categoryPerformanceCtx = document.getElementById('categoryPerformanceChart')?.getContext('2d');
+                if (categoryPerformanceCtx) {
+                    categoryPerformanceChart = new Chart(categoryPerformanceCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(categoryPerformance),
+                            datasets: [{
+                                label: 'عدد المبيعات',
+                                data: Object.values(categoryPerformance),
+                                backgroundColor: '#3498db'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+
+                // مخطط توزيع مصادر العملاء
+                const customerSources = {
+                    'البحث العضوي': 0,
+                    'إعلانات جوجل': 0,
+                    'وسائل التواصل': 0,
+                    'التسويق عبر البريد': 0,
+                    'أخرى': 0
+                };
+                
+                usersData.forEach(user => {
+                    const source = user.source || 'أخرى';
+                    if (customerSources.hasOwnProperty(source)) {
+                        customerSources[source]++;
+                    } else {
+                        customerSources['أخرى']++;
+                    }
+                });
+                
+                const customerSourcesCtx = document.getElementById('customerSourcesChart')?.getContext('2d');
+                if (customerSourcesCtx) {
+                    customerSourcesChart = new Chart(customerSourcesCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(customerSources),
+                            datasets: [{
+                                data: Object.values(customerSources),
+                                backgroundColor: ['#3498db', '#2ecc71', '#9b59b6', '#f1c40f', '#e74c3c']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const total = Object.values(customerSources).reduce((a, b) => a + b, 0);
+                                            const percentage = total > 0 ? Math.round(context.parsed * 100 / total) : 0;
+                                            return `${context.label}: ${context.raw} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // مخطط معدل التحويل
+                const conversionRates = Array(12).fill(0);
+                const visitors = Array(12).fill(100); // افتراضي 100 زائر لكل شهر
+                
+                // حساب عدد الطلبات لكل شهر
+                const monthlyOrders = Array(12).fill(0);
+                ordersData.forEach(order => {
+                    const date = new Date(order.created_at);
+                    const month = date.getMonth();
+                    monthlyOrders[month]++;
+                });
+                
+                // حساب معدل التحويل (عدد الطلبات / عدد الزوار * 100)
+                for (let i = 0; i < 12; i++) {
+                    conversionRates[i] = (monthlyOrders[i] / visitors[i]) * 100;
+                }
+                
+                const conversionRateCtx = document.getElementById('conversionRateChart')?.getContext('2d');
+                if (conversionRateCtx) {
+                    conversionRateChart = new Chart(conversionRateCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+                            datasets: [{
+                                label: 'معدل التحويل (%)',
+                                data: conversionRates,
+                                borderColor: '#9b59b6',
+                                backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'top' } },
+                            scales: { 
+                                y: { 
+                                    beginAtZero: true,
+                                    max: 100
+                                } 
+                            }
+                        }
+                    });
+                }
+
+                // تحديث إحصائيات التقارير
+                const totalRevenue = monthlyRevenue.reduce((a, b) => a + b, 0);
+                const totalProfit = totalRevenue * 0.3; // افتراضي 30% ربح
+                const avgOrderValue = ordersData.length > 0 ? totalRevenue / ordersData.length : 0;
+                
+                document.getElementById('totalRevenue').textContent = `${totalRevenue.toFixed(2)} L.E`;
+                document.getElementById('totalProfit').textContent = `${totalProfit.toFixed(2)} L.E`;
+                document.getElementById('avgOrderValue').textContent = `${avgOrderValue.toFixed(2)} L.E`;
+            }
+        }
+
+        // عرض تفاصيل الطلب
+        function viewOrderDetails(orderId) {
+            const order = ordersData.find(o => o.id === orderId);
+            if (!order) {
+                alert('الطلب غير موجود');
+                return;
+            }
+            
+            let orderDetails = `رقم الطلب: ${order.id}\n`;
+            orderDetails += `العميل: ${order.customerDetails?.name || 'ضيف'}\n`;
+            orderDetails += `التاريخ: ${new Date(order.created_at).toLocaleDateString('ar-SA')}\n`;
+            orderDetails += `الحالة: ${order.status}\n`;
+            orderDetails += `المجموع: ${(order.total || 0).toFixed(2)} L.E\n\n`;
+            orderDetails += 'المنتجات:\n';
+            
+            if (order.items && order.items.length) {
+                order.items.forEach(item => {
+                    const product = productsData.find(p => p.id === item.id) || {};
+                    orderDetails += `- ${product.name || 'غير معروف'} (${item.quantity} × ${(item.price || 0).toFixed(2)} L.E)\n`;
+                });
+            }
+            
+            alert(orderDetails);
+        }
+
+        // تعديل المنتج
+        function editProduct(productId) {
+            const product = productsData.find(p => p.id === productId);
+            if (!product) {
+                alert('المنتج غير موجود');
+                return;
+            }
+            
+            const newPrice = prompt('أدخل السعر الجديد:', product.price || 0);
+            if (newPrice && !isNaN(newPrice)) {
+                updateProductPrice(productId, parseFloat(newPrice));
+            }
+        }
+
+        // تحديث سعر المنتج
+        async function updateProductPrice(productId, newPrice) {
+            try {
+                const response = await fetch(`${BASE_URL}/api/products/${productId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ price: newPrice }),
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    alert('تم تحديث سعر المنتج بنجاح');
+                    await fetchProductsData();
+                    updateDashboard();
+                } else {
+                    throw new Error('فشل في تحديث السعر');
+                }
+            } catch (error) {
+                console.error('خطأ في تحديث سعر المنتج:', error);
+                alert('حدث خطأ أثناء تحديث سعر المنتج');
             }
         }
 
@@ -1273,6 +2361,34 @@
             } catch (error) {
                 console.error('خطأ في إعادة التعبئة:', error);
                 alert('حدث خطأ أثناء إعادة تعبئة المخزون');
+            }
+        }
+
+        // حفظ الإعدادات
+        async function saveSettings() {
+            const storeName = document.getElementById('storeName').value;
+            const storeCurrency = document.getElementById('storeCurrency').value;
+            const inventoryThreshold = document.getElementById('inventoryThreshold').value;
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        storeName, 
+                        storeCurrency, 
+                        inventoryThreshold 
+                    }),
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    alert('تم حفظ الإعدادات بنجاح');
+                } else {
+                    throw new Error('فشل في حفظ الإعدادات');
+                }
+            } catch (error) {
+                console.error('خطأ في حفظ الإعدادات:', error);
+                alert('حدث خطأ أثناء حفظ الإعدادات');
             }
         }
 
@@ -1319,6 +2435,8 @@
                     document.getElementById('productsContent')?.classList.add('hidden');
                     document.getElementById('ordersContent')?.classList.add('hidden');
                     document.getElementById('customersContent')?.classList.add('hidden');
+                    document.getElementById('reportsContent')?.classList.add('hidden');
+                    document.getElementById('settingsContent')?.classList.add('hidden');
                     
                     const page = item.dataset.page;
                     const mainTitleEl = document.getElementById('mainTitle');
@@ -1336,9 +2454,32 @@
                     } else if (page === 'customers') {
                         document.getElementById('customersContent')?.classList.remove('hidden');
                         updateCustomersStats(usersData);
+                    } else if (page === 'reports') {
+                        document.getElementById('reportsContent')?.classList.remove('hidden');
+                        updateDashboard('reports');
+                    } else if (page === 'settings') {
+                        document.getElementById('settingsContent')?.classList.remove('hidden');
+                        loadSettings();
                     }
                 });
             });
+        }
+
+        // تحميل الإعدادات
+        async function loadSettings() {
+            try {
+                const response = await fetch(`${BASE_URL}/api/settings`, { credentials: 'include' });
+                if (response.ok) {
+                    const settings = await response.json();
+                    document.getElementById('storeName').value = settings.storeName || '';
+                    document.getElementById('storeCurrency').value = settings.storeCurrency || 'SAR';
+                    document.getElementById('inventoryThreshold').value = settings.inventoryThreshold || 10;
+                } else {
+                    throw new Error('فشل في تحميل الإعدادات');
+                }
+            } catch (error) {
+                console.error('خطأ في تحميل الإعدادات:', error);
+            }
         }
 
         // تسجيل الخروج

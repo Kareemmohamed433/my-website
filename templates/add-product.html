@@ -35,7 +35,7 @@
       background: #e4d8d8; 
       border-radius: 15px; 
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); 
-      color: #ff0000; 
+      color: #333; 
       padding: 20px;
       transition: transform 0.3s ease, box-shadow 0.3s ease; 
     }
@@ -133,6 +133,24 @@
     .nav-link:hover {
       transform: translateY(-2px);
     }
+    .price-container {
+      display: flex;
+      gap: 15px;
+    }
+    .price-container .form-group {
+      flex: 1;
+    }
+    .profit-display {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .profit-display span {
+      color: #28a745;
+    }
   </style>
 </head>
 <body>
@@ -156,35 +174,49 @@
 
   <div class="container mt-5">
     <h1 class="section-title">➕✨ إضافة منتج</h1>
-    <div class="card p-4 mx-auto" style="max-width: 600px;">
+    <div class="card p-4 mx-auto" style="max-width: 800px;">
       <form id="add-product-form" enctype="multipart/form-data">
         <div class="form-group">
           <label for="prodName">اسم المنتج</label>
           <input type="text" class="form-control" id="prodName" placeholder="📌 اسم المنتج" required>
         </div>
         
-        <div class="form-group">
-          <label for="price">السعر</label>
-          <input type="number" class="form-control" id="price" placeholder="💲 السعر" required>
+        <div class="price-container">
+          <div class="form-group">
+            <label for="originalPrice">سعر الشراء (من المورد)</label>
+            <input type="number" class="form-control" id="originalPrice" placeholder="💲 سعر الشراء" required step="0.01" min="0.01">
+          </div>
+          
+          <div class="form-group">
+            <label for="sellingPrice">سعر البيع (للمستخدم)</label>
+            <input type="number" class="form-control" id="sellingPrice" placeholder="💲 سعر البيع" required step="0.01" min="0.01">
+          </div>
+        </div>
+        
+        <div class="profit-display">
+          هامش الربح: <span id="profitAmount">0.00</span> دولار (<span id="profitPercentage">0%</span>)
         </div>
         
         <div class="form-group">
           <label for="discount">نسبة الخصم</label>
-          <input type="number" class="form-control" id="discount" placeholder="٪ نسبة الخصم (اختياري)">
+          <input type="number" class="form-control" id="discount" placeholder="٪ نسبة الخصم (اختياري)" min="0" max="100">
         </div>
         
         <div class="form-group">
           <label for="amount">الكمية</label>
-          <input type="number" class="form-control" id="amount" placeholder="📊 الكمية" value="1" required>
+          <input type="number" class="form-control" id="amount" placeholder="📊 الكمية" value="1" required min="1">
         </div>
         
         <!-- Main Image Section -->
         <div class="image-upload-section">
           <div class="form-group">
             <label for="mainImage">الصورة الرئيسية</label>
-            <input type="file" class="form-control-file" id="mainImage" name="mainImage" accept="image/*" required>
-            <small class="form-text text-muted">هذه ستكون الصورة الأساسية للمنتج</small>
-            <div id="main-image-preview" class="image-preview"></div>
+            <div class="custom-file">
+              <input type="file" class="custom-file-input" id="mainImage" name="mainImage" accept="image/*" required>
+              <label class="custom-file-label" for="mainImage">اختر صورة رئيسية...</label>
+            </div>
+            <small class="form-text text-muted">هذه ستكون الصورة الأساسية للمنتج (الحجم الأقصى 5MB)</small>
+            <div id="main-image-preview" class="image-preview mt-2"></div>
           </div>
         </div>
         
@@ -192,9 +224,12 @@
         <div class="image-upload-section">
           <div class="form-group">
             <label for="additionalImages">صور إضافية</label>
-            <input type="file" class="form-control-file" id="additionalImages" name="additionalImages" accept="image/*" multiple>
-            <small class="form-text text-muted">يمكنك إضافة عدة صور إضافية للمنتج</small>
-            <div id="additional-images-preview" class="image-preview"></div>
+            <div class="custom-file">
+              <input type="file" class="custom-file-input" id="additionalImages" name="additionalImages" accept="image/*" multiple>
+              <label class="custom-file-label" for="additionalImages">اختر صور إضافية...</label>
+            </div>
+            <small class="form-text text-muted">يمكنك إضافة عدة صور إضافية للمنتج (الحجم الأقصى 5MB لكل صورة)</small>
+            <div id="additional-images-preview" class="image-preview mt-2"></div>
           </div>
         </div>
         
@@ -220,7 +255,7 @@
         </div>
         
         <button type="button" class="btn btn-custom w-100" onclick="addProduct()" id="submit-btn">
-          ➕ إضافة المنتج
+          <i class="fas fa-plus-circle"></i> إضافة المنتج
         </button>
         
         <div id="loading-spinner" class="loading-spinner">
@@ -254,6 +289,48 @@
     const submitBtn = document.getElementById('submit-btn');
     const loadingSpinner = document.getElementById('loading-spinner');
     const messageDiv = document.getElementById('message');
+    const originalPriceInput = document.getElementById('originalPrice');
+    const sellingPriceInput = document.getElementById('sellingPrice');
+    const profitAmount = document.getElementById('profitAmount');
+    const profitPercentage = document.getElementById('profitPercentage');
+
+    // Update profit calculation when prices change
+    originalPriceInput.addEventListener('input', calculateProfit);
+    sellingPriceInput.addEventListener('input', calculateProfit);
+
+    function calculateProfit() {
+      const originalPrice = parseFloat(originalPriceInput.value) || 0;
+      const sellingPrice = parseFloat(sellingPriceInput.value) || 0;
+      
+      const profit = sellingPrice - originalPrice;
+      const percentage = originalPrice > 0 ? (profit / originalPrice) * 100 : 0;
+      
+      profitAmount.textContent = profit.toFixed(2);
+      profitPercentage.textContent = percentage.toFixed(2) + '%';
+      
+      // Change color based on profit
+      if (profit < 0) {
+        profitAmount.style.color = '#dc3545';
+        profitPercentage.style.color = '#dc3545';
+      } else {
+        profitAmount.style.color = '#28a745';
+        profitPercentage.style.color = '#28a745';
+      }
+    }
+
+    // Update file input labels
+    mainImageInput.addEventListener('change', function() {
+      const fileName = this.files[0] ? this.files[0].name : 'اختر صورة رئيسية...';
+      $(this).next('.custom-file-label').html(fileName);
+      previewImage(this, mainImagePreview, true);
+    });
+
+    additionalImagesInput.addEventListener('change', function() {
+      const fileCount = this.files.length;
+      const labelText = fileCount > 0 ? `${fileCount} صورة مختارة` : 'اختر صور إضافية...';
+      $(this).next('.custom-file-label').html(labelText);
+      previewImage(this, additionalImagesPreview);
+    });
 
     // Image Preview Functionality
     function previewImage(input, previewContainer, isMain = false) {
@@ -302,15 +379,6 @@
       }
     }
 
-    // Event Listeners for Image Changes
-    mainImageInput.addEventListener('change', function() {
-      previewImage(this, mainImagePreview, true);
-    });
-
-    additionalImagesInput.addEventListener('change', function() {
-      previewImage(this, additionalImagesPreview);
-    });
-
     // Form Validation
     function validateForm() {
       // Validate product name
@@ -319,10 +387,23 @@
         return false;
       }
       
-      // Validate price
-      const price = document.getElementById('price').value;
-      if (!price || isNaN(price) || parseFloat(price) <= 0) {
-        showMessage('❌ يرجى إدخال سعر صحيح', 'danger');
+      // Validate original price
+      const originalPrice = parseFloat(originalPriceInput.value);
+      if (!originalPrice || originalPrice <= 0) {
+        showMessage('❌ يرجى إدخال سعر شراء صحيح', 'danger');
+        return false;
+      }
+      
+      // Validate selling price
+      const sellingPrice = parseFloat(sellingPriceInput.value);
+      if (!sellingPrice || sellingPrice <= 0) {
+        showMessage('❌ يرجى إدخال سعر بيع صحيح', 'danger');
+        return false;
+      }
+      
+      // Validate selling price > original price
+      if (sellingPrice <= originalPrice) {
+        showMessage('❌ سعر البيع يجب أن يكون أكبر من سعر الشراء', 'danger');
         return false;
       }
       
@@ -347,6 +428,9 @@
       messageDiv.className = `alert alert-${type}`;
       messageDiv.classList.add('show');
       
+      // Scroll to message
+      messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      
       if (duration > 0) {
         setTimeout(() => {
           messageDiv.classList.remove('show');
@@ -362,7 +446,8 @@
       // Prepare form data
       const formData = new FormData();
       formData.append('name', document.getElementById('prodName').value);
-      formData.append('price', document.getElementById('price').value);
+      formData.append('originalPrice', document.getElementById('originalPrice').value);
+      formData.append('price', document.getElementById('sellingPrice').value);
       formData.append('discount', document.getElementById('discount').value || '0');
       formData.append('amount', document.getElementById('amount').value);
       formData.append('description', document.getElementById('description').value);
@@ -405,6 +490,8 @@
           document.getElementById('add-product-form').reset();
           mainImagePreview.innerHTML = '';
           additionalImagesPreview.innerHTML = '';
+          $('.custom-file-label').html('اختر صورة...');
+          calculateProfit(); // Reset profit display
           
           // Show product link if available
           if (data.productUrl) {

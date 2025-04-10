@@ -647,9 +647,11 @@ def add_product():
         if request.user['role'] != 'admin':
             return jsonify({"error": "❌ غير مسموح لك بإضافة منتج"}), 403
 
+        # الحصول على البيانات من النموذج
         product_data = {
             "name": request.form.get("name"),
-            "price": float(request.form.get("price", 0)),
+            "originalPrice": float(request.form.get("originalPrice", 0)),  # سعر الشراء
+            "price": float(request.form.get("sellingPrice", 0)),  # سعر البيع للمستخدم
             "discount": float(request.form.get("discount", 0)),
             "amount": int(request.form.get("amount", 1)),
             "description": request.form.get("description"),
@@ -659,24 +661,27 @@ def add_product():
             "images": []
         }
 
-        # Handle main image upload to Cloudinary
+        # التحقق من أن سعر البيع أكبر من سعر الشراء
+        if product_data["price"] <= product_data["originalPrice"]:
+            return jsonify({"error": "❌ سعر البيع يجب أن يكون أكبر من سعر الشراء"}), 400
+
+        # رفع الصور إلى Cloudinary (بدون تغيير)
         if 'mainImage' in request.files:
             main_image = request.files['mainImage']
             if main_image and allowed_file(main_image.filename):
                 upload_result = cloudinary.uploader.upload(main_image, folder="products")
                 product_data["image"] = upload_result["secure_url"]
                 product_data["images"].append(upload_result["secure_url"])
-            else:
-                return jsonify({"error": "❌ Invalid main image file"}), 400
 
-        # Handle additional images upload to Cloudinary
         additional_images = request.files.getlist('additionalImages')
         for img in additional_images:
             if img and allowed_file(img.filename):
                 upload_result = cloudinary.uploader.upload(img, folder="products")
                 product_data["images"].append(upload_result["secure_url"])
 
+        # حفظ المنتج في قاعدة البيانات
         products_collection.insert_one(product_data)
+        
         return jsonify({
             "success": True,
             "message": "✅ تم إضافة المنتج بنجاح",
